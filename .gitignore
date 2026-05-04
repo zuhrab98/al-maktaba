@@ -32,6 +32,11 @@ Thumbs.db
 .claude/
 .playwright-mcp/
 
+# Internal docs
+SPEC.md
+CLAUDE.md
+docs/
+
 # Temp / screenshots
 shamela-*.png
 shamela-*.md
