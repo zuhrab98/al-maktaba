@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="ru" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#f9f9f8">
+<title>al-maktaba · hero v9</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ─────────────────────────────────────────────
+   Geist (Vercel's typeface) + Geist Mono
+   Светлый, нейтральный, современный продукт.
+   Никакой "бумаги", никакого тепла — чистый UI.
+   Единственная индивидуальность: арабский текст
+   рендерится как первоклассный контент, не декор.
+───────────────────────────────────────────── */
+:root {
+  --font:       'Geist', -apple-system, BlinkMacSystemFont, sans-serif;
+  --mono:       'Geist Mono', 'SF Mono', monospace;
+  --arabic:     'Amiri', serif;
+
+  --bg:         #f9f9f8;
+  --surface:    #ffffff;
+  --surface-2:  #f4f4f3;
+  --surface-3:  #ebebea;
+  --border:     #e8e8e7;
+  --border-2:   #d4d4d2;
+
+  --text-1:     #0a0a09;
+  --text-2:     #52524f;
+  --text-3:     #a0a09d;
+
+  --accent:     #0a0a09;     /* почти чёрный — не цветной акцент */
+  --accent-2:   #1a1a18;
+
+  --tag-bg:     #f0f0ef;
+  --tag-fg:     #52524f;
+
+  --radius:     8px;
+  --radius-sm:  5px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+body {
+  background: var(--bg);
+  color: var(--text-1);
+  font-family: var(--font);
+  font-size: 14px;
+  line-height: 1.5;
+}
+a { color: inherit; text-decoration: none; }
+button { font: inherit; cursor: pointer; background: none; border: none; color: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: var(--radius-sm); }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; animation: none !important; } }
+
+/* ── sandbox wrapper ── */
+.sandbox-note {
+  padding: 9px 20px;
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--border);
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--text-3);
+  text-align: center;
+}
+.frame {
+  max-width: 1280px;
+  margin: 20px auto;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow:
+    0 0 0 1px rgba(0,0,0,.03),
+    0 4px 6px -2px rgba(0,0,0,.04),
+    0 20px 48px -12px rgba(0,0,0,.08);
+}
+.chrome {
+  display: flex; align-items: center; gap: 7px;
+  padding: 10px 14px;
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--border);
+}
+.chrome .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--border-2); }
+.chrome .url {
+  flex: 1; text-align: center;
+  font-family: var(--mono); font-size: 10px;
+  color: var(--text-3); letter-spacing: .02em;
+}
+
+/* ══════════════════════════════════════════
+   HEADER — как у Linear/Vercel:
+   лого | nav центр | util справа
+   тонкая нижняя граница, height фиксированная
+══════════════════════════════════════════ */
+.app-top {
+  display: grid;
+  grid-template-columns: 200px 1fr 200px;
+  align-items: center;
+  height: 56px;
+  padding: 0 24px;
+  border-bottom: 1px solid var(--border);
+  background: rgba(249,249,248,.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-1);
+  letter-spacing: -.01em;
+}
+.brand .ar {
+  font-family: var(--arabic);
+  font-size: 13px;
+  color: var(--text-3);
+  direction: rtl;
+  font-weight: 400;
+}
+
+.top-nav {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 2px;
+}
+.top-nav a {
+  font-size: 13.5px;
+  font-weight: 400;
+  color: var(--text-2);
+  padding: 5px 12px;
+  border-radius: var(--radius-sm);
+  transition: color 150ms, background 150ms;
+  white-space: nowrap;
+}
+.top-nav a:hover { color: var(--text-1); background: var(--surface-2); }
+.top-nav a.on { color: var(--text-1); font-weight: 500; }
+
+.top-util {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+}
+.search-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  height: 32px;
+  padding: 0 10px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 12.5px;
+  color: var(--text-3);
+  transition: border-color 150ms, color 150ms;
+  touch-action: manipulation;
+}
+.search-btn:hover { border-color: var(--border-2); color: var(--text-2); }
+.search-btn .kbd {
+  font-family: var(--mono); font-size: 9.5px;
+  background: var(--surface); border: 1px solid var(--border);
+  padding: 1px 5px; border-radius: 3px; color: var(--text-3);
+  margin-left: 4px;
+}
+.lang-tog {
+  display: inline-flex;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 2px;
+  gap: 1px;
+}
+.lang-tog button {
+  height: 24px;
+  padding: 0 8px;
+  border-radius: 3px;
+  font-family: var(--mono); font-size: 10px;
+  text-transform: uppercase; letter-spacing: .06em;
+  color: var(--text-3);
+  transition: background 150ms, color 150ms;
+  touch-action: manipulation;
+}
+.lang-tog button.on { background: var(--surface); color: var(--text-1); box-shadow: 0 1px 2px rgba(0,0,0,.06); }
+.icon-btn {
+  width: 32px; height: 32px;
+  display: inline-flex; align-items: center; justify-content: center;
+  border-radius: var(--radius-sm);
+  color: var(--text-3);
+  transition: background 150ms, color 150ms;
+  touch-action: manipulation;
+}
+.icon-btn:hover { background: var(--surface-2); color: var(--text-2); }
+
+/* ══════════════════════════════════════════════════════
+   HERO V9 — современный продукт.
+
+   Концепция: никакого "визуального дизайна" ради дизайна.
+   Весь экран — это один большой поисковый момент.
+   Центр: поле поиска как главный элемент страницы.
+   Под ним: теги-быстрые фильтры (категории/авторы).
+   Снизу: 4 цифры — как статус-строка, не hero-блок.
+
+   Это то, как делают Linear, Raycast, Vercel —
+   продукт говорит через функцию, не через украшения.
+══════════════════════════════════════════════════════ */
+.home-hero {
+  padding: 80px 48px 72px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  border-bottom: 1px solid var(--border);
+}
+
+/* мета-строка над поиском */
+.hero-kicker {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 28px;
+}
+.hero-kicker .dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: #22c55e; /* зелёный — "онлайн/активно" */
+  box-shadow: 0 0 0 3px rgba(34,197,94,.12);
+}
+.hero-kicker span {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-3);
+  letter-spacing: .04em;
+}
+
+/* большой поиск */
+.hero-search-wrap {
+  width: 100%;
+  max-width: 640px;
+  margin-bottom: 16px;
+  position: relative;
+}
+.hero-search {
+  width: 100%;
+  height: 52px;
+  padding: 0 48px 0 48px;
+  background: var(--surface);
+  border: 1.5px solid var(--border-2);
+  border-radius: var(--radius);
+  font-family: var(--font);
+  font-size: 15px;
+  color: var(--text-1);
+  outline: none;
+  transition: border-color 150ms, box-shadow 150ms;
+  touch-action: manipulation;
+}
+.hero-search::placeholder { color: var(--text-3); }
+.hero-search:focus,
+.hero-search:focus-visible {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(10,10,9,.07);
+  outline: none;
+}
+.hero-search-icon {
+  position: absolute;
+  left: 16px; top: 50%; transform: translateY(-50%);
+  color: var(--text-3);
+  pointer-events: none;
+}
+.hero-search-kbd {
+  position: absolute;
+  right: 14px; top: 50%; transform: translateY(-50%);
+  font-family: var(--mono); font-size: 10px;
+  background: var(--surface-2); border: 1px solid var(--border);
+  padding: 2px 6px; border-radius: 4px; color: var(--text-3);
+  pointer-events: none;
+}
+
+/* быстрые фильтры */
+.hero-filters {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-bottom: 64px;
+  width: 100%;
+  max-width: 640px;
+}
+.hero-filters .filter-label {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-3);
+  letter-spacing: .04em;
+  margin-right: 2px;
+}
+.hero-filters {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.filter-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 28px;
+  padding: 0 10px;
+  background: var(--tag-bg);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  font-size: 12.5px;
+  color: var(--tag-fg);
+  transition: background 150ms, border-color 150ms, color 150ms;
+  touch-action: manipulation;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.filter-tag:hover { background: var(--surface-3); border-color: var(--border-2); color: var(--text-1); }
+.filter-tag .ar {
+  font-family: var(--arabic);
+  font-size: 13px;
+  direction: rtl;
+  line-height: 1;
+}
+
+/* статистика — статус-строка снизу */
+.hero-stats-row {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  width: 100%;
+  max-width: 640px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.stat-item {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 16px;
+  border-right: 1px solid var(--border);
+  transition: background 150ms;
+}
+.stat-item:last-child { border-right: none; }
+.stat-item:hover { background: var(--surface-3); }
+
+.stat-num {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -.02em;
+  color: var(--text-1);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+.stat-label {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  color: var(--text-3);
+  letter-spacing: .02em;
+  line-height: 1;
+}
+
+/* кнопки — под hero, не в нём */
+.hero-cta {
+  margin-top: 28px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.btn {
+  display: inline-flex; align-items: center; gap: 7px;
+  height: 36px;
+  padding: 0 16px;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  font-family: var(--font);
+  font-size: 13.5px;
+  font-weight: 500;
+  line-height: 1;
+  transition: background 150ms, border-color 150ms, color 150ms, box-shadow 150ms;
+  text-decoration: none;
+  touch-action: manipulation;
+}
+.btn-primary {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+  box-shadow: 0 1px 2px rgba(0,0,0,.12);
+}
+.btn-primary:hover {
+  background: var(--accent-2);
+  border-color: var(--accent-2);
+  box-shadow: 0 2px 6px rgba(0,0,0,.16);
+}
+.btn-ghost {
+  background: transparent;
+  color: var(--text-2);
+  border-color: var(--border);
+}
+.btn-ghost:hover {
+  background: var(--surface-2);
+  border-color: var(--border-2);
+  color: var(--text-1);
+}
+
+/* ── mobile ── */
+@media (max-width: 768px) {
+  .app-top {
+    grid-template-columns: 1fr auto;
+    padding: 0 16px;
+  }
+  .top-nav { display: none; }
+
+  .home-hero { padding: 48px 20px 56px; }
+  .hero-stats-row { flex-wrap: wrap; }
+  .stat-item { flex: calc(50% - 1px); }
+  .stat-item:nth-child(2) { border-right: none; }
+  .stat-item:nth-child(3) { border-top: 1px solid var(--border); }
+  .stat-item:nth-child(4) { border-top: 1px solid var(--border); border-right: none; }
+  .hero-cta { flex-direction: column; width: 100%; max-width: 640px; }
+  .hero-cta .btn { justify-content: center; width: 100%; }
+}
+</style>
+</head>
+<body>
+<div class="sandbox-note">hero v9 · product · Geist · search-first layout</div>
+
+<div class="frame">
+  <div class="chrome">
+    <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+    <span class="url">al-maktaba.ru</span>
+  </div>
+
+  <header class="app-top" role="banner">
+    <div class="brand">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+      <span translate="no">al-maktaba</span>
+      <span class="ar">المكتبة</span>
+    </div>
+
+    <nav class="top-nav" aria-label="Основная навигация">
+      <a href="#" class="on">Главная</a>
+      <a href="#">Каталог</a>
+      <a href="#">Авторы</a>
+      <a href="#">Недавние</a>
+      <a href="#">Моё</a>
+    </nav>
+
+    <div class="top-util">
+      <div class="lang-tog" role="group" aria-label="Язык интерфейса">
+        <button class="on" aria-pressed="true">RU</button>
+        <button aria-pressed="false">EN</button>
+      </div>
+      <button class="icon-btn" aria-label="Переключить тему">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <section class="home-hero" aria-label="Главная">
+
+    <div class="hero-kicker" aria-hidden="true">
+      <span class="dot"></span>
+      <span>8 425 книг доступно</span>
+    </div>
+
+    <div class="hero-search-wrap">
+      <svg class="hero-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+        <circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/>
+      </svg>
+      <input
+        class="hero-search"
+        type="search"
+        name="q"
+        autocomplete="off"
+        spellcheck="false"
+        placeholder="Поиск книг, авторов, разделов…"
+        aria-label="Поиск по библиотеке"
+      >
+      <span class="hero-search-kbd" aria-hidden="true">⌘K</span>
+    </div>
+
+    <div class="hero-filters" role="group" aria-label="Быстрые фильтры">
+      <span class="filter-label">Перейти:</span>
+      <a class="filter-tag" href="#">
+        <span class="ar">الفقه</span> Фикх
+      </a>
+      <a class="filter-tag" href="#">
+        <span class="ar">الحديث</span> Хадис
+      </a>
+      <a class="filter-tag" href="#">
+        <span class="ar">التفسير</span> Тафсир
+      </a>
+      <a class="filter-tag" href="#">
+        <span class="ar">العقيدة</span> Акыда
+      </a>
+      <a class="filter-tag" href="#">
+        <span class="ar">التاريخ</span> История
+      </a>
+    </div>
+
+    <dl class="hero-stats-row" aria-label="Статистика библиотеки">
+      <div class="stat-item">
+        <dt class="stat-num">8 425</dt>
+        <dd class="stat-label">книг</dd>
+      </div>
+      <div class="stat-item">
+        <dt class="stat-num">3 146</dt>
+        <dd class="stat-label">авторов</dd>
+      </div>
+      <div class="stat-item">
+        <dt class="stat-num">40</dt>
+        <dd class="stat-label">разделов</dd>
+      </div>
+      <div class="stat-item">
+        <dt class="stat-num">7 млн</dt>
+        <dd class="stat-label">страниц</dd>
+      </div>
+    </dl>
+
+    <div class="hero-cta">
+      <a class="btn btn-primary" href="#">
+        Весь каталог
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+      </a>
+      <a class="btn btn-ghost" href="#">Авторы</a>
+    </div>
+
+  </section>
+</div>
+</body>
+</html>

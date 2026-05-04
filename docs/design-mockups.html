@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html lang="ru" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>al-maktaba · design v2 · sketches</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Inter:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,500;1,6..72,400&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+/* ===========================================================
+   Reading Room · al-maktaba design system
+   ===========================================================
+   Сдержанная редакторская эстетика. Тёплая бумага, ink-черный,
+   единственный oxblood-акцент. Newsreader для serif, Amiri для
+   арабского, IBM Plex Mono для меток. Никаких эмодзи, только
+   SVG-иконки 1.5px stroke. Хайрлайн-границы, асимметричная сетка.
+   =========================================================== */
+
+:root{
+  --serif:'Newsreader',Georgia,'Times New Roman',serif;
+  --sans:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;
+  --mono:'IBM Plex Mono',ui-monospace,monospace;
+  --arabic:'Amiri',serif;
+
+  --paper:#f6f2e7;
+  --paper-2:#efeadb;
+  --paper-3:#e6dfca;
+  --ink:#14110c;
+  --ink-2:#4a443a;
+  --ink-3:#8b8473;
+  --ink-4:#b8b09c;
+  --rule:#dcd3b9;
+  --rule-soft:#ebe4ce;
+  --accent:#7a2424;
+  --accent-soft:rgba(122,36,36,.08);
+}
+
+*{box-sizing:border-box;margin:0;padding:0;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+body{background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:14px;line-height:1.5;padding-bottom:120px}
+a{color:inherit}
+svg{flex:0 0 auto}
+button{font:inherit;color:inherit;cursor:pointer;background:transparent;border:none}
+:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:3px}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;animation:none!important}}
+
+/* ───── meta page ───── */
+.shell-top{position:sticky;top:0;z-index:50;background:rgba(246,242,231,.92);backdrop-filter:saturate(1.1) blur(8px);border-bottom:1px solid var(--rule);padding:14px 32px;display:flex;align-items:center;justify-content:space-between}
+.shell-top .brand{font-family:var(--serif);font-size:18px;font-weight:400;letter-spacing:-.005em;font-variation-settings:"opsz" 36}
+.shell-top .brand .dim{color:var(--ink-3)}
+.shell-top nav{display:flex;gap:22px;font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--ink-3)}
+.shell-top nav a{text-decoration:none;color:inherit;transition:color 160ms}
+.shell-top nav a:hover{color:var(--ink)}
+
+.intro{padding:88px 32px 56px;max-width:880px}
+.intro .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-3);margin-bottom:18px}
+.intro h1{font-family:var(--serif);font-weight:400;font-size:clamp(40px,5.6vw,68px);line-height:1.02;letter-spacing:-.02em;font-variation-settings:"opsz" 72;margin-bottom:18px}
+.intro h1 em{font-style:italic;color:var(--ink-2)}
+.intro p{font-family:var(--serif);font-size:18px;line-height:1.55;color:var(--ink-2);max-width:560px;font-variation-settings:"opsz" 18}
+.intro .principles{margin-top:36px;display:grid;grid-template-columns:repeat(3,1fr);gap:32px;max-width:780px;border-top:1px solid var(--rule);padding-top:24px}
+.intro .principles dt{font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3);margin-bottom:6px}
+.intro .principles dd{font-family:var(--serif);font-size:14px;color:var(--ink-2);line-height:1.5;font-variation-settings:"opsz" 14}
+
+.scene{padding:64px 32px 32px;border-top:1px solid var(--rule)}
+.scene-head{max-width:1180px;margin:0 auto 24px;display:flex;align-items:flex-end;justify-content:space-between;gap:32px}
+.scene-head .label{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);margin-bottom:8px;display:inline-flex;align-items:center;gap:8px}
+.scene-head .label::before{content:"";width:18px;height:1px;background:currentColor}
+.scene-head h2{font-family:var(--serif);font-weight:400;font-size:32px;line-height:1.1;letter-spacing:-.015em;font-variation-settings:"opsz" 60;margin-bottom:6px}
+.scene-head h2 em{font-style:italic;color:var(--ink-2)}
+.scene-head .desc{font-family:var(--serif);font-size:15px;color:var(--ink-2);max-width:480px;line-height:1.5;font-variation-settings:"opsz" 14}
+.scene-head .meta{font-family:var(--mono);font-size:10.5px;color:var(--ink-3);text-align:right;letter-spacing:.04em;line-height:1.8;min-width:200px}
+.scene-head .meta b{color:var(--ink);font-weight:500}
+
+.frame{max-width:1180px;margin:0 auto;background:var(--paper);border:1px solid var(--rule);border-radius:6px;overflow:hidden;box-shadow:0 1px 0 rgba(20,17,12,.02),0 24px 56px -28px rgba(20,17,12,.18)}
+.frame .chrome{display:flex;align-items:center;gap:8px;padding:8px 14px;background:var(--paper-2);border-bottom:1px solid var(--rule)}
+.frame .chrome .dot{width:9px;height:9px;border-radius:50%;background:var(--paper-3)}
+.frame .chrome .url{flex:1;text-align:center;font-family:var(--mono);font-size:10.5px;color:var(--ink-3);letter-spacing:.04em}
+
+/* ===========================================================
+   App shell (used inside every screen)
+   =========================================================== */
+.app{font-family:var(--sans);background:var(--paper);color:var(--ink)}
+.app-top{display:grid;grid-template-columns:auto 1fr auto;align-items:center;padding:18px 36px;gap:36px;border-bottom:1px solid var(--rule)}
+.app-top .brand-mark{font-family:var(--serif);font-weight:400;font-size:20px;letter-spacing:-.005em;font-variation-settings:"opsz" 36;display:inline-flex;align-items:center;gap:9px}
+.app-top .brand-mark .glyph{font-family:var(--arabic);font-size:14px;color:var(--ink-3);direction:rtl}
+.app-top .nav{display:flex;justify-content:center;gap:30px;font-size:13px;color:var(--ink-2)}
+.app-top .nav a{text-decoration:none;color:inherit;padding:6px 0;position:relative;transition:color 160ms}
+.app-top .nav a:hover{color:var(--ink)}
+.app-top .nav a.on{color:var(--ink)}
+.app-top .nav a.on::after{content:"";position:absolute;left:0;right:0;bottom:-19px;height:1px;background:var(--accent)}
+.app-top .util{display:flex;align-items:center;gap:14px}
+.app-top .util .search-trig{display:inline-flex;align-items:center;gap:8px;background:var(--paper-2);border:1px solid var(--rule);border-radius:6px;padding:7px 11px;font-size:12.5px;color:var(--ink-3);min-width:220px}
+.app-top .util .search-trig .kbd{margin-left:auto;font-family:var(--mono);font-size:10px;background:var(--paper);border:1px solid var(--rule);padding:1px 5px;border-radius:3px;color:var(--ink-2)}
+.app-top .util .lang{display:inline-flex;font-family:var(--mono);font-size:10.5px;text-transform:uppercase;letter-spacing:.08em;border:1px solid var(--rule);border-radius:5px;padding:2px;background:var(--paper)}
+.app-top .util .lang span{padding:3px 7px;border-radius:3px;color:var(--ink-3)}
+.app-top .util .lang span.on{background:var(--ink);color:var(--paper)}
+.app-top .util .icon-btn{width:30px;height:30px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;color:var(--ink-2);transition:background 160ms,color 160ms}
+.app-top .util .icon-btn:hover{background:var(--paper-2);color:var(--ink)}
+
+/* ===========================================================
+   1 · HOME
+   =========================================================== */
+.home-hero{padding:120px 36px;display:flex;align-items:center;justify-content:center;gap:10px;border-bottom:1px solid var(--rule)}
+.btn{font-family:var(--sans);font-size:13.5px;font-weight:500;padding:11px 20px;border-radius:6px;border:1px solid transparent;display:inline-flex;align-items:center;gap:9px;text-decoration:none;transition:all 160ms;line-height:1}
+.btn .ar{font-family:var(--arabic);font-size:15px;font-weight:400;direction:rtl}
+.btn-primary{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.btn-primary:hover{background:var(--accent);border-color:var(--accent)}
+.btn-ghost{background:transparent;color:var(--ink);border-color:var(--rule)}
+.btn-ghost:hover{background:var(--paper-2);border-color:var(--ink-3)}
+
+.home-section{padding:48px 36px;border-bottom:1px solid var(--rule)}
+.home-section .sec-head{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:24px;gap:24px}
+.home-section .sec-head .label{font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3);margin-bottom:6px}
+.home-section .sec-head h2{font-family:var(--serif);font-weight:400;font-size:26px;line-height:1.1;letter-spacing:-.012em;font-variation-settings:"opsz" 36}
+.home-section .sec-head h2 em{font-style:italic;color:var(--ink-2)}
+.home-section .sec-head a{font-size:13px;color:var(--ink-2);text-decoration:none;display:inline-flex;align-items:center;gap:6px;border-bottom:1px solid var(--rule);padding-bottom:2px;transition:color 160ms,border-color 160ms}
+.home-section .sec-head a:hover{color:var(--accent);border-color:var(--accent)}
+
+.continue{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.continue .card{background:var(--paper-2);border:1px solid var(--rule);border-radius:6px;padding:18px 18px 16px;text-decoration:none;color:var(--ink);display:flex;flex-direction:column;gap:14px;transition:all 180ms}
+.continue .card:hover{border-color:var(--ink-3);background:var(--paper-3)}
+.continue .top{display:flex;justify-content:space-between;align-items:center;font-family:var(--mono);font-size:10px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.08em}
+.continue .top .pct{color:var(--accent);font-weight:500}
+.continue .ttl{font-family:var(--arabic);direction:rtl;font-size:22px;font-weight:700;line-height:1.3;color:var(--ink);min-height:58px}
+.continue .auth{font-family:var(--arabic);direction:rtl;font-size:13px;color:var(--ink-2)}
+.continue .progress{height:1px;background:var(--rule);margin-top:auto;position:relative}
+.continue .progress::after{content:"";position:absolute;left:0;top:-1px;bottom:-1px;height:3px;background:var(--accent)}
+.continue .card[data-p="42"] .progress::after{width:42%}
+.continue .card[data-p="78"] .progress::after{width:78%}
+.continue .card[data-p="14"] .progress::after{width:14%}
+.continue .meta{display:flex;justify-content:space-between;font-family:var(--mono);font-size:10px;color:var(--ink-3);letter-spacing:.05em;text-transform:uppercase}
+
+.cat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--rule);border:1px solid var(--rule);border-radius:6px;overflow:hidden}
+.cat-grid a{background:var(--paper);padding:20px 20px 18px;text-decoration:none;color:var(--ink);display:flex;flex-direction:column;justify-content:space-between;min-height:138px;transition:background 160ms;position:relative}
+.cat-grid a:hover{background:var(--paper-2)}
+.cat-grid a:hover .arr{color:var(--accent);transform:translateX(2px)}
+.cat-grid .num{font-family:var(--mono);font-size:10px;letter-spacing:.12em;color:var(--ink-3);text-transform:uppercase}
+.cat-grid .ar{font-family:var(--arabic);direction:rtl;font-size:21px;font-weight:700;line-height:1.25;color:var(--ink)}
+.cat-grid .lat{font-family:var(--serif);font-style:italic;font-size:12.5px;color:var(--ink-3);font-variation-settings:"opsz" 14;margin-top:4px}
+.cat-grid .bot{display:flex;align-items:center;justify-content:space-between;font-family:var(--mono);font-size:10.5px;color:var(--ink-2);letter-spacing:.04em;border-top:1px solid var(--rule);padding-top:10px;margin-top:14px}
+.cat-grid .bot b{color:var(--ink);font-weight:500}
+.cat-grid .arr{color:var(--ink-3);transition:all 200ms}
+
+.recent{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
+.recent a{text-decoration:none;color:var(--ink);display:flex;flex-direction:column;gap:10px}
+.recent .cv{aspect-ratio:3/4;background:linear-gradient(160deg,#cebd92 0%,#7a5e2e 100%);border-radius:3px;position:relative;box-shadow:1px 1px 0 var(--rule)}
+.recent .cv::before{content:"";position:absolute;left:8px;top:0;bottom:0;width:1px;background:rgba(0,0,0,.18)}
+.recent .cv-2{background:linear-gradient(160deg,#a89478 0%,#5a4218 100%)}
+.recent .cv-3{background:linear-gradient(160deg,#c4b08a 0%,#6a4f1a 100%)}
+.recent .cv-4{background:linear-gradient(160deg,#b59e72 0%,#473418 100%)}
+.recent .ttl{font-family:var(--arabic);direction:rtl;font-size:17px;font-weight:700;line-height:1.3;margin-top:4px}
+.recent .auth{font-family:var(--arabic);direction:rtl;font-size:12.5px;color:var(--ink-2)}
+.recent .meta{font-family:var(--mono);font-size:9.5px;letter-spacing:.06em;color:var(--ink-3);text-transform:uppercase}
+
+.foot{padding:36px 36px 28px;display:grid;grid-template-columns:1fr auto;gap:32px;font-size:12.5px;color:var(--ink-3);font-family:var(--serif);font-style:italic;align-items:center;font-variation-settings:"opsz" 14}
+.foot .ar{font-family:var(--arabic);direction:rtl;font-style:normal;color:var(--ink-2);font-size:13px}
+.foot .links{display:flex;gap:18px;font-family:var(--sans);font-style:normal;font-size:12px;color:var(--ink-2)}
+.foot .links a{text-decoration:none}
+.foot .links a:hover{color:var(--ink)}
+
+/* ===========================================================
+   2 · CATEGORY
+   =========================================================== */
+.cat-head{padding:36px 36px 28px;display:grid;grid-template-columns:1fr auto;gap:32px;align-items:end;border-bottom:1px solid var(--rule)}
+.cat-crumbs{font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;color:var(--ink-3);text-transform:uppercase;display:flex;align-items:center;gap:8px;margin-bottom:14px}
+.cat-crumbs a{text-decoration:none;color:inherit}
+.cat-crumbs a:hover{color:var(--ink)}
+.cat-crumbs .ar{font-family:var(--arabic);direction:rtl;text-transform:none;letter-spacing:0;font-size:12px;color:var(--ink-2)}
+.cat-head .ar-h1{font-family:var(--arabic);direction:rtl;font-size:46px;font-weight:700;color:var(--ink);line-height:1.05;margin-bottom:6px}
+.cat-head .lat{font-family:var(--serif);font-style:italic;font-size:18px;color:var(--ink-2);font-variation-settings:"opsz" 18}
+.cat-head .stats{display:flex;gap:28px;font-family:var(--mono);font-size:10.5px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.08em}
+.cat-head .stats div b{display:block;font-family:var(--serif);font-weight:400;font-size:24px;color:var(--ink);font-variation-settings:"opsz" 36;letter-spacing:-.005em;margin-bottom:2px;text-transform:none}
+
+.cat-bar{padding:18px 36px;display:flex;align-items:center;gap:24px;justify-content:space-between;border-bottom:1px solid var(--rule);background:var(--paper-2)}
+.tabs{display:inline-flex;background:var(--paper);border:1px solid var(--rule);border-radius:6px;padding:2px}
+.tabs button{padding:6px 14px;font-size:12.5px;color:var(--ink-2);border-radius:4px;display:inline-flex;align-items:center;gap:7px}
+.tabs button.on{background:var(--ink);color:var(--paper)}
+.tabs button .ar{font-family:var(--arabic);direction:rtl;font-size:13px;color:inherit;opacity:.8}
+.cat-bar .tools{display:flex;align-items:center;gap:10px}
+.cat-bar .search{display:inline-flex;align-items:center;gap:8px;background:var(--paper);border:1px solid var(--rule);border-radius:6px;padding:7px 11px;font-size:12.5px;color:var(--ink-3);min-width:280px}
+.cat-bar .search .ar{font-family:var(--arabic);direction:rtl;font-size:13px}
+.view-tog{display:inline-flex;background:var(--paper);border:1px solid var(--rule);border-radius:6px;padding:2px}
+.view-tog button{width:28px;height:24px;border-radius:4px;color:var(--ink-3);display:inline-flex;align-items:center;justify-content:center}
+.view-tog button.on{background:var(--ink);color:var(--paper)}
+
+.book-list{padding:8px 36px}
+.book-row{display:grid;grid-template-columns:42px 1fr 200px 110px 60px;gap:24px;padding:18px 0;border-bottom:1px solid var(--rule-soft);align-items:center;text-decoration:none;color:var(--ink);transition:background 160ms;margin:0 -16px;padding-left:16px;padding-right:16px;border-radius:4px}
+.book-row:hover{background:var(--paper-2)}
+.book-row .n{font-family:var(--mono);font-size:11px;color:var(--ink-3);text-align:right}
+.book-row .ar-tt{font-family:var(--arabic);direction:rtl;font-size:21px;font-weight:700;line-height:1.3}
+.book-row .ar-tt .au{display:block;font-size:13px;color:var(--ink-2);font-weight:400;margin-top:3px}
+.book-row .yr{font-family:var(--serif);font-style:italic;font-size:13.5px;color:var(--ink-2);font-variation-settings:"opsz" 14}
+.book-row .yr b{font-style:normal;font-weight:500;color:var(--ink);font-family:var(--arabic);direction:rtl}
+.book-row .pg{font-family:var(--mono);font-size:11px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.06em}
+.book-row .pg b{display:block;font-family:var(--serif);font-size:18px;font-weight:400;color:var(--ink);text-transform:none;font-variation-settings:"opsz" 18}
+.book-row .save{justify-self:end;width:32px;height:32px;border-radius:6px;color:var(--ink-3);display:inline-flex;align-items:center;justify-content:center;border:1px solid transparent;transition:all 160ms}
+.book-row .save:hover{color:var(--accent);border-color:var(--rule);background:var(--paper)}
+.book-row .save.on{color:var(--accent)}
+
+.cat-foot{padding:24px 36px 32px;display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--rule)}
+.cat-foot .info{font-family:var(--mono);font-size:11px;letter-spacing:.06em;color:var(--ink-3)}
+.cat-foot .info b{color:var(--ink);font-weight:500}
+.pager{display:inline-flex;gap:2px;align-items:center}
+.pager button{min-width:32px;height:32px;border-radius:5px;font-size:12.5px;color:var(--ink-2);padding:0 9px;display:inline-flex;align-items:center;justify-content:center;gap:6px}
+.pager button:hover{background:var(--paper-2);color:var(--ink)}
+.pager button.on{background:var(--ink);color:var(--paper)}
+.pager .ell{padding:0 4px;color:var(--ink-3)}
+
+/* ===========================================================
+   3 · BOOK DETAIL
+   =========================================================== */
+.bd-head{padding:48px 36px 36px;border-bottom:1px solid var(--rule)}
+.bd-head .crumbs{font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;color:var(--ink-3);text-transform:uppercase;display:flex;align-items:center;gap:8px;margin-bottom:24px}
+.bd-head .crumbs a{text-decoration:none;color:inherit}
+.bd-head .grid{display:grid;grid-template-columns:200px 1fr;gap:48px;align-items:start}
+.bd-cover{aspect-ratio:3/4;background:linear-gradient(160deg,#c8b282 0%,#5e441a 100%);border-radius:4px;box-shadow:0 8px 24px -8px rgba(20,17,12,.25);position:relative}
+.bd-cover::before{content:"";position:absolute;left:10px;top:0;bottom:0;width:1px;background:rgba(0,0,0,.2)}
+.bd-cover .cv-tt{position:absolute;left:24px;right:24px;top:30px;font-family:var(--arabic);direction:rtl;color:#f0e6c8;font-size:18px;font-weight:700;text-align:center;line-height:1.3}
+.bd-cover .cv-au{position:absolute;left:24px;right:24px;bottom:24px;font-family:var(--arabic);direction:rtl;color:#d8c89a;font-size:11px;text-align:center}
+.bd-info .label{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);margin-bottom:14px;display:inline-flex;align-items:center;gap:10px}
+.bd-info .label::after{content:"";flex:0 0 30px;height:1px;background:currentColor}
+.bd-info .ar-h1{font-family:var(--arabic);direction:rtl;font-size:42px;font-weight:700;line-height:1.1;color:var(--ink);margin-bottom:8px}
+.bd-info .ar-au{font-family:var(--arabic);direction:rtl;font-size:18px;color:var(--ink-2);margin-bottom:24px}
+.bd-info .actions{display:flex;gap:8px;margin-bottom:30px}
+
+.bd-meta{display:grid;grid-template-columns:repeat(2,1fr);gap:0;border-top:1px solid var(--rule)}
+.bd-meta dl{display:contents}
+.bd-meta dt{font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);padding:14px 0;border-bottom:1px solid var(--rule-soft)}
+.bd-meta dd{font-family:var(--arabic);direction:rtl;font-size:14.5px;color:var(--ink);padding:14px 0;border-bottom:1px solid var(--rule-soft);text-align:left}
+.bd-meta dd.lat{font-family:var(--serif);direction:ltr;text-align:left;font-style:italic;font-size:14px;color:var(--ink-2);font-variation-settings:"opsz" 14}
+
+.bd-toc{padding:36px;border-top:1px solid var(--rule)}
+.bd-toc .label{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3);margin-bottom:18px;display:flex;justify-content:space-between;align-items:center}
+.bd-toc .label .ar{font-family:var(--arabic);direction:rtl;text-transform:none;letter-spacing:0;font-size:14px;color:var(--ink-2)}
+.bd-toc-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:0 32px;font-family:var(--arabic);direction:rtl}
+.bd-toc-grid a{display:flex;justify-content:space-between;align-items:baseline;padding:11px 0;border-bottom:1px dotted var(--rule-soft);text-decoration:none;color:var(--ink);font-size:15.5px;transition:color 160ms}
+.bd-toc-grid a:hover{color:var(--accent)}
+.bd-toc-grid a .pg{font-family:var(--mono);font-size:10.5px;color:var(--ink-3);direction:ltr;letter-spacing:.04em}
+.bd-toc-grid a.indent{padding-right:18px;font-size:14px;color:var(--ink-2)}
+.bd-toc-grid a.indent::before{content:"—";color:var(--ink-4);margin-left:6px}
+
+/* ===========================================================
+   4 · READER (with light/sepia/dark via class on .reader)
+   =========================================================== */
+.reader{position:relative;display:grid;grid-template-columns:240px 1fr;min-height:640px}
+.reader .r-header{grid-column:1/-1;display:grid;grid-template-columns:auto 1fr auto;align-items:center;padding:14px 24px;gap:24px;border-bottom:1px solid var(--r-rule);position:sticky;top:0;background:var(--r-bg);z-index:10}
+.reader .r-back{display:inline-flex;align-items:center;gap:8px;font-size:12.5px;color:var(--r-ink-2);text-decoration:none;transition:color 160ms}
+.reader .r-back:hover{color:var(--r-ink)}
+.reader .r-titles{text-align:center;font-family:var(--arabic);direction:rtl}
+.reader .r-titles .t{font-size:16px;font-weight:700;color:var(--r-ink);line-height:1.2}
+.reader .r-titles .a{font-size:12.5px;color:var(--r-ink-2);margin-top:1px}
+.reader .r-tools{display:flex;gap:2px}
+.reader .r-tool{width:32px;height:32px;border-radius:6px;color:var(--r-ink-2);display:inline-flex;align-items:center;justify-content:center;transition:all 160ms}
+.reader .r-tool:hover{background:var(--r-hover);color:var(--r-ink)}
+.reader .r-tool.on{background:var(--r-accent);color:var(--r-on-accent)}
+.reader .r-tool .lbl{font-family:var(--mono);font-size:10.5px;font-weight:500}
+.reader .r-bar{grid-column:1/-1;height:2px;background:var(--r-rule-soft);position:relative}
+.reader .r-bar::after{content:"";position:absolute;left:0;top:0;bottom:0;width:32%;background:var(--r-accent)}
+
+.reader .r-side{padding:22px 18px;border-right:1px solid var(--r-rule);background:var(--r-side);overflow:hidden}
+.reader .r-side-h{font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--r-ink-3);margin-bottom:14px;display:flex;justify-content:space-between;align-items:center}
+.reader .r-side-h .pages{font-family:var(--arabic);direction:rtl;font-size:11px;color:var(--r-ink-2);letter-spacing:0;text-transform:none}
+.reader .r-toc-h{font-family:var(--arabic);direction:rtl;font-size:15px;font-weight:700;color:var(--r-ink);padding-bottom:12px;border-bottom:1px solid var(--r-rule);margin-bottom:14px}
+.reader .toc{display:flex;flex-direction:column;gap:1px}
+.reader .toc a{font-family:var(--arabic);direction:rtl;font-size:13.5px;color:var(--r-ink-2);text-decoration:none;padding:8px 10px 8px 8px;line-height:1.4;border-radius:0 4px 4px 0;border-right:2px solid transparent;display:flex;justify-content:space-between;align-items:baseline;gap:8px;transition:all 140ms}
+.reader .toc a:hover{background:var(--r-hover);color:var(--r-ink)}
+.reader .toc a.on{background:var(--r-hover);border-right-color:var(--r-accent);color:var(--r-accent);font-weight:700}
+.reader .toc a.in{padding-right:20px;font-size:12.5px}
+.reader .toc a .p{font-family:var(--mono);font-size:10px;color:var(--r-ink-3);direction:ltr;letter-spacing:.04em;font-weight:400}
+
+.reader .r-content{padding:36px 56px 24px;position:relative}
+.reader .crumb-line{font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--r-ink-3);margin-bottom:24px;display:flex;align-items:center;gap:10px;justify-content:center;max-width:680px;margin-left:auto;margin-right:auto}
+.reader .crumb-line .d{width:3px;height:3px;border-radius:50%;background:var(--r-accent)}
+.reader .crumb-line .ar{font-family:var(--arabic);direction:rtl;text-transform:none;letter-spacing:0;font-size:12px;color:var(--r-ink-2)}
+.reader .page{max-width:680px;margin:0 auto;font-family:var(--arabic);direction:rtl;font-size:21px;line-height:1.95;color:var(--r-ink);text-align:justify}
+.reader .page h3{text-align:center;font-size:24px;font-weight:700;color:var(--r-accent-strong);margin-bottom:18px;padding-bottom:14px;position:relative}
+.reader .page h3::after{content:"";position:absolute;left:50%;bottom:0;transform:translateX(-50%);width:48px;height:1px;background:var(--r-accent)}
+.reader .page .basmala{text-align:center;font-size:23px;color:var(--r-accent);margin-bottom:24px;font-weight:700}
+.reader .page p{margin-bottom:18px}
+.reader .page p:first-of-type::first-letter{font-size:1.35em;color:var(--r-accent);font-weight:700}
+.reader .page mark{background:var(--r-mark);color:inherit;padding:0 1px;border-radius:2px}
+
+.reader .r-paginate{grid-column:1/-1;display:flex;justify-content:center;align-items:center;gap:6px;padding:14px;border-top:1px solid var(--r-rule);background:var(--r-bg);position:sticky;bottom:0}
+.reader .r-paginate button{width:32px;height:32px;border-radius:6px;color:var(--r-ink-2);display:inline-flex;align-items:center;justify-content:center;transition:all 140ms}
+.reader .r-paginate button:hover{background:var(--r-hover);color:var(--r-ink)}
+.reader .r-paginate input{width:56px;height:30px;text-align:center;border:1px solid var(--r-rule);background:transparent;color:var(--r-ink);font-family:var(--arabic);direction:rtl;font-size:14px;padding:0 6px;border-radius:5px;font-weight:700}
+.reader .r-paginate .of{font-family:var(--arabic);direction:rtl;font-size:13px;color:var(--r-ink-3);margin:0 4px}
+.reader .r-paginate .go{font-family:var(--arabic);direction:rtl;font-size:13px;background:var(--r-accent);color:var(--r-on-accent);padding:0 14px;height:30px;border-radius:5px;width:auto;margin-left:8px;font-weight:700}
+
+.reader .selection{position:absolute;top:230px;left:62%;background:var(--r-popup);color:var(--r-popup-ink);padding:5px;border-radius:8px;display:flex;align-items:center;box-shadow:0 8px 24px rgba(0,0,0,.18);z-index:5}
+.reader .selection::after{content:"";position:absolute;bottom:-5px;left:30%;width:10px;height:10px;background:var(--r-popup);transform:rotate(45deg)}
+.reader .selection button{display:inline-flex;align-items:center;gap:6px;padding:7px 11px;font-size:12px;color:inherit;border-radius:5px}
+.reader .selection button:hover{background:rgba(255,255,255,.1)}
+.reader .selection .div{width:1px;background:rgba(255,255,255,.18);margin:5px 1px;height:18px}
+
+/* light theme tokens */
+.reader.light{
+  --r-bg:var(--paper); --r-side:var(--paper-2); --r-hover:var(--paper-3);
+  --r-ink:var(--ink); --r-ink-2:var(--ink-2); --r-ink-3:var(--ink-3);
+  --r-rule:var(--rule); --r-rule-soft:var(--rule-soft);
+  --r-accent:var(--accent); --r-accent-strong:#5a1a1a; --r-on-accent:var(--paper);
+  --r-mark:rgba(122,36,36,.15);
+  --r-popup:#14110c; --r-popup-ink:var(--paper);
+  background:var(--r-bg);color:var(--r-ink);
+}
+
+/* sepia theme tokens */
+.reader.sepia{
+  --r-bg:#ede0c2; --r-side:#e3d3b1; --r-hover:#d8c79e;
+  --r-ink:#3f2e1f; --r-ink-2:#6e553d; --r-ink-3:#9a8265;
+  --r-rule:#cdb88e; --r-rule-soft:#dac7a0;
+  --r-accent:#7a3618; --r-accent-strong:#5a230b; --r-on-accent:#ede0c2;
+  --r-mark:rgba(122,54,24,.18);
+  --r-popup:#3f2e1f; --r-popup-ink:#ede0c2;
+  background:var(--r-bg);color:var(--r-ink);
+}
+
+/* dark theme tokens */
+.reader.dark{
+  --r-bg:#1a1814; --r-side:#13110d; --r-hover:#2a261d;
+  --r-ink:#ede0c8; --r-ink-2:#a89c84; --r-ink-3:#736a58;
+  --r-rule:#2a261d; --r-rule-soft:#1f1c16;
+  --r-accent:#d99450; --r-accent-strong:#e9a86c; --r-on-accent:#1a1814;
+  --r-mark:rgba(217,148,80,.22);
+  --r-popup:#0a0908; --r-popup-ink:#ede0c8;
+  background:var(--r-bg);color:var(--r-ink);
+}
+
+/* tabs above reader */
+.theme-pick{display:flex;gap:6px;margin-bottom:14px;font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3)}
+.theme-pick span{padding:5px 11px;border:1px solid var(--rule);border-radius:5px;background:var(--paper)}
+.theme-pick span.on{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+
+</style>
+</head>
+<body>
+
+<header class="shell-top">
+  <div class="brand">al-maktaba <span class="dim">/ design v2 sketches</span></div>
+  <nav>
+    <a href="#home">home</a>
+    <a href="#category">category</a>
+    <a href="#book">book</a>
+    <a href="#reader">reader</a>
+  </nav>
+</header>
+
+<section class="intro">
+  <div class="eyebrow">design system v2 · april 2026</div>
+  <h1>Тихий читальный зал.<br><em>Без украшений.</em></h1>
+  <p>Четыре экрана, одна типографическая система, один сдержанный акцент. Newsreader для&nbsp;латиницы, Amiri для&nbsp;арабского, IBM&nbsp;Plex Mono для&nbsp;меток. Никаких эмодзи, золотых звёзд и&nbsp;«римских&nbsp;цифр». Реальные SVG-иконки, реальная плотность, реальное уважение к&nbsp;контенту.</p>
+  <dl class="principles">
+    <div><dt>Палитра</dt><dd>Тёплая бумага, ink-черный, единственный oxblood-акцент. Используется только там, где он зарабатывает своё&nbsp;место.</dd></div>
+    <div><dt>Типографика</dt><dd>Newsreader даёт editorial-character, Amiri несёт арабский. Шрифтовая иерархия делает почти всю работу&nbsp;дизайна.</dd></div>
+    <div><dt>Иконки</dt><dd>Только SVG-line, 1.5px stroke, согласованный размер 16px. Никаких unicode-символов в&nbsp;роли иконок.</dd></div>
+  </dl>
+</section>
+
+<!-- ===== 1 · HOME ===== -->
+<section class="scene" id="home">
+  <div class="scene-head">
+    <div>
+      <div class="label">экран 01 · home</div>
+      <h2>Главная. <em>Точка входа.</em></h2>
+      <p class="desc">Hero c&nbsp;единственным CTA. Continue reading первым (если есть). Категорий &mdash; 8&nbsp;штук в&nbsp;строгой сетке. Recently added &mdash; 4&nbsp;книги с&nbsp;обложками.</p>
+    </div>
+    <div class="meta">
+      <div>route &mdash; <b>/</b></div>
+      <div>hero &mdash; <b>asymmetric grid</b></div>
+      <div>density &mdash; <b>medium</b></div>
+    </div>
+  </div>
+
+  <div class="frame">
+    <div class="chrome"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">al-maktaba.ru</span></div>
+    <div class="app">
+
+      <header class="app-top">
+        <div class="brand-mark">al-maktaba <span class="glyph">المكتبة</span></div>
+        <nav class="nav">
+          <a href="#" class="on">главная</a>
+          <a href="#">каталог</a>
+          <a href="#">авторы</a>
+          <a href="#">недавние</a>
+          <a href="#">моё</a>
+        </nav>
+        <div class="util">
+          <button class="search-trig">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+            Поиск книг и&nbsp;авторов <span class="kbd">⌘K</span>
+          </button>
+          <span class="lang"><span class="on">RU</span><span>EN</span></span>
+          <button class="icon-btn" title="dark mode">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+          </button>
+        </div>
+      </header>
+
+      <section class="home-hero" aria-label="Главные действия">
+        <a class="btn btn-primary" href="#">Каталог книг
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+        </a>
+        <a class="btn btn-ghost" href="#">Авторы</a>
+      </section>
+
+      <section class="home-section">
+        <div class="sec-head">
+          <div>
+            <div class="label">01 · продолжить чтение</div>
+            <h2>Где вы <em>остановились</em></h2>
+          </div>
+          <a href="#">всё в /me <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 5l7 7-7 7"/></svg></a>
+        </div>
+        <div class="continue">
+          <a class="card" href="#" data-p="42">
+            <div class="top"><span>صحيح البخاري</span><span class="pct">42%</span></div>
+            <div class="ttl">باب فضل العلم على العبادة</div>
+            <div class="auth">محمد بن إسماعيل البخاري</div>
+            <div class="progress"></div>
+            <div class="meta"><span>стр. 1342 / 3204</span><span>читать</span></div>
+          </a>
+          <a class="card" href="#" data-p="78">
+            <div class="top"><span>مجموع الفتاوى</span><span class="pct">78%</span></div>
+            <div class="ttl">في حقيقة الإيمان وكماله</div>
+            <div class="auth">تقي الدين ابن تيمية</div>
+            <div class="progress"></div>
+            <div class="meta"><span>стр. 712 / 912</span><span>читать</span></div>
+          </a>
+          <a class="card" href="#" data-p="14">
+            <div class="top"><span>إحياء علوم الدين</span><span class="pct">14%</span></div>
+            <div class="ttl">كتاب آداب تلاوة القرآن</div>
+            <div class="auth">أبو حامد الغزالي</div>
+            <div class="progress"></div>
+            <div class="meta"><span>стр. 218 / 1556</span><span>читать</span></div>
+          </a>
+        </div>
+      </section>
+
+      <section class="home-section">
+        <div class="sec-head">
+          <div>
+            <div class="label">02 · разделы библиотеки</div>
+            <h2>Восемь <em>больших</em> разделов</h2>
+          </div>
+          <a href="#">все 40 категорий <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 5l7 7-7 7"/></svg></a>
+        </div>
+        <div class="cat-grid">
+          <a href="#"><div><div class="num">01</div><div class="ar">العقيدة والفرق</div><div class="lat">aqīda &amp; sects</div></div><div class="bot"><span><b>958</b> книг</span><span class="arr"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 12h14M13 5l7 7-7 7"/></svg></span></div></a>
+          <a href="#"><div><div class="num">02</div><div class="ar">القرآن وعلومه</div><div class="lat">qurʾān &amp; sciences</div></div><div class="bot"><span><b>736</b> книг</span><span class="arr"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 12h14M13 5l7 7-7 7"/></svg></span></div></a>
+          <a href="#"><div><div class="num">03</div><div class="ar">الحديث وعلومه</div><div class="lat">ḥadīth &amp; sciences</div></div><div class="bot"><span><b>2 033</b></span><span class="arr"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 12h14M13 5l7 7-7 7"/></svg></span></div></a>
+          <a href="#"><div><div class="num">04</div><div class="ar">الفقه وأصوله</div><div class="lat">fiqh &amp; uṣūl</div></div><div class="bot"><span><b>1 551</b></span><span class="arr"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 12h14M13 5l7 7-7 7"/></svg></span></div></a>
+          <a href="#"><div><div class="num">05</div><div class="ar">الرقائق والسيرة والتراجم</div><div class="lat">spirituality, sīra, lives</div></div><div class="bot"><span><b>1 391</b></span><span class="arr"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 12h14M13 5l7 7-7 7"/></svg></span></div></a>
+          <a href="#"><div><div class="num">06</div><div class="ar">اللغة والأدب</div><div class="lat">language &amp; literature</div></div><div class="bot"><span><b>933</b> книг</span><span class="arr"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 12h14M13 5l7 7-7 7"/></svg></span></div></a>
+          <a href="#"><div><div class="num">07</div><div class="ar">البلدان والأنساب</div><div class="lat">geography &amp; lineage</div></div><div class="bot"><span><b>149</b> книг</span><span class="arr"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 12h14M13 5l7 7-7 7"/></svg></span></div></a>
+          <a href="#"><div><div class="num">08</div><div class="ar">الجوامع وعام</div><div class="lat">compendia &amp; misc</div></div><div class="bot"><span><b>635</b> книг</span><span class="arr"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 12h14M13 5l7 7-7 7"/></svg></span></div></a>
+        </div>
+      </section>
+
+      <section class="home-section">
+        <div class="sec-head">
+          <div>
+            <div class="label">03 · апрель 2026</div>
+            <h2>Недавно <em>добавленные</em></h2>
+          </div>
+          <a href="#">все новинки <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 5l7 7-7 7"/></svg></a>
+        </div>
+        <div class="recent">
+          <a href="#"><div class="cv"></div><div class="ttl">مسالك الأبصار</div><div class="auth">ابن فضل الله العمري</div><div class="meta">ت 749 · 27 ج</div></a>
+          <a href="#"><div class="cv cv-2"></div><div class="ttl">مجالس رمضانية</div><div class="auth">نجيب الشرعبي</div><div class="meta">1447 · 344 с</div></a>
+          <a href="#"><div class="cv cv-3"></div><div class="ttl">إكمال تهذيب الكمال</div><div class="auth">علاء الدين مغلطاي</div><div class="meta">ت 762 · قطعة</div></a>
+          <a href="#"><div class="cv cv-4"></div><div class="ttl">تفسير ابن جزي</div><div class="auth">ابن جزي الكلبي</div><div class="meta">ت 741 · 4 ج</div></a>
+        </div>
+      </section>
+
+      <footer class="foot">
+        <div>al-maktaba &middot; некоммерческий проект &middot; данные с&nbsp;благодарностью &middot; <span class="ar">البيانات من المكتبة الشاملة</span></div>
+        <div class="links"><a href="#">about</a><a href="#">contact</a><a href="#">github</a></div>
+      </footer>
+
+    </div>
+  </div>
+</section>
+
+<!-- ===== 2 · CATEGORY ===== -->
+<section class="scene" id="category">
+  <div class="scene-head">
+    <div>
+      <div class="label">экран 02 · category</div>
+      <h2>Раздел. <em>958&nbsp;книг под&nbsp;контролем.</em></h2>
+      <p class="desc">Список вместо карточек &mdash; даёт реальную плотность. Сортировка одной строкой, пагинация по&nbsp;30. Save в&nbsp;один&nbsp;клик.</p>
+    </div>
+    <div class="meta">
+      <div>route &mdash; <b>/c/aqida</b></div>
+      <div>density &mdash; <b>list · 30/page</b></div>
+      <div>sort &mdash; <b>death &middot; alpha &middot; pages</b></div>
+    </div>
+  </div>
+
+  <div class="frame">
+    <div class="chrome"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">al-maktaba.ru/c/aqida</span></div>
+    <div class="app">
+
+      <header class="app-top">
+        <div class="brand-mark">al-maktaba <span class="glyph">المكتبة</span></div>
+        <nav class="nav">
+          <a href="#">главная</a>
+          <a href="#" class="on">каталог</a>
+          <a href="#">авторы</a>
+          <a href="#">недавние</a>
+          <a href="#">моё</a>
+        </nav>
+        <div class="util">
+          <button class="search-trig"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg> Поиск <span class="kbd">⌘K</span></button>
+          <span class="lang"><span class="on">RU</span><span>EN</span></span>
+          <button class="icon-btn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></button>
+        </div>
+      </header>
+
+      <header class="cat-head">
+        <div>
+          <div class="cat-crumbs"><a href="#">главная</a> / <a href="#">каталог</a> / <span class="ar">العقيدة والفرق</span></div>
+          <div class="ar-h1">العقيدة والفرق</div>
+          <div class="lat"><i>ʿaqīda &amp; firaq</i> · вероучение и&nbsp;течения</div>
+        </div>
+        <div class="stats">
+          <div><b>958</b>книг</div>
+          <div><b>247</b>авторов</div>
+          <div><b>4.2М</b>страниц</div>
+        </div>
+      </header>
+
+      <div class="cat-bar">
+        <div class="tabs">
+          <button class="on">по году смерти <span class="ar">حسب الوفاة</span></button>
+          <button>по алфавиту <span class="ar">أبجدي</span></button>
+          <button>по объёму <span class="ar">حسب الحجم</span></button>
+        </div>
+        <div class="tools">
+          <div class="search">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+            <span class="ar">بحث في أسماء الكتب</span>
+          </div>
+          <div class="view-tog">
+            <button title="список" class="on"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><circle cx="3.5" cy="6" r="1"/><circle cx="3.5" cy="12" r="1"/><circle cx="3.5" cy="18" r="1"/></svg></button>
+            <button title="карточки"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg></button>
+          </div>
+        </div>
+      </div>
+
+      <div class="book-list">
+        <a class="book-row" href="#">
+          <div class="n">01</div>
+          <div class="ar-tt">الفقه الأبسط<span class="au">أبو حنيفة النعمان</span></div>
+          <div class="yr">умер <b>١٥٠ هـ</b> · 767 г.</div>
+          <div class="pg"><b>167</b> صفحة</div>
+          <button class="save"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></button>
+        </a>
+        <a class="book-row" href="#">
+          <div class="n">02</div>
+          <div class="ar-tt">الإيمان<span class="au">أبو عبيد القاسم بن سلام</span></div>
+          <div class="yr">умер <b>٢٢٤ هـ</b> · 838 г.</div>
+          <div class="pg"><b>99</b> صفحة</div>
+          <button class="save"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></button>
+        </a>
+        <a class="book-row" href="#">
+          <div class="n">03</div>
+          <div class="ar-tt">الحيدة في الرد على من قال بخلق القرآن<span class="au">عبد العزيز الكناني المكي</span></div>
+          <div class="yr">умер <b>٢٤٠ هـ</b> · 854 г.</div>
+          <div class="pg"><b>89</b> صفحة</div>
+          <button class="save on"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.6"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></button>
+        </a>
+        <a class="book-row" href="#">
+          <div class="n">04</div>
+          <div class="ar-tt">أصول السنة<span class="au">أحمد بن حنبل</span></div>
+          <div class="yr">умер <b>٢٤١ هـ</b> · 855 г.</div>
+          <div class="pg"><b>54</b> صفحة</div>
+          <button class="save"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></button>
+        </a>
+        <a class="book-row" href="#">
+          <div class="n">05</div>
+          <div class="ar-tt">السنة لابن أبي عاصم<span class="au">أبو بكر بن أبي عاصم</span></div>
+          <div class="yr">умер <b>٢٨٧ هـ</b> · 900 г.</div>
+          <div class="pg"><b>1 416</b> صفحة</div>
+          <button class="save"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></button>
+        </a>
+        <a class="book-row" href="#">
+          <div class="n">06</div>
+          <div class="ar-tt">شرح أصول اعتقاد أهل السنة والجماعة<span class="au">هبة الله اللالكائي</span></div>
+          <div class="yr">умер <b>٤١٨ هـ</b> · 1027 г.</div>
+          <div class="pg"><b>2 241</b> صفحة</div>
+          <button class="save"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></button>
+        </a>
+        <a class="book-row" href="#">
+          <div class="n">07</div>
+          <div class="ar-tt">العقيدة الواسطية<span class="au">تقي الدين ابن تيمية</span></div>
+          <div class="yr">умер <b>٧٢٨ هـ</b> · 1328 г.</div>
+          <div class="pg"><b>112</b> صفحة</div>
+          <button class="save on"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.6"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></button>
+        </a>
+      </div>
+
+      <div class="cat-foot">
+        <div class="info">показано <b>1–7</b> из <b>958</b> &middot; стр. <b>1</b> / 32</div>
+        <nav class="pager">
+          <button><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m15 18-6-6 6-6"/></svg> назад</button>
+          <button class="on">1</button>
+          <button>2</button>
+          <button>3</button>
+          <button>4</button>
+          <span class="ell">…</span>
+          <button>32</button>
+          <button>дальше <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m9 18 6-6-6-6"/></svg></button>
+        </nav>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ===== 3 · BOOK DETAIL ===== -->
+<section class="scene" id="book">
+  <div class="scene-head">
+    <div>
+      <div class="label">экран 03 · book detail</div>
+      <h2>Карточка книги. <em>Перед&nbsp;входом в&nbsp;текст.</em></h2>
+      <p class="desc">Обложка слева, метаданные справа. Содержание (TOC) ниже &mdash; в&nbsp;две&nbsp;колонки, древовидно. Один&nbsp;CTA: «начать&nbsp;чтение».</p>
+    </div>
+    <div class="meta">
+      <div>route &mdash; <b>/b/2256</b></div>
+      <div>cta &mdash; <b>read · save</b></div>
+      <div>toc &mdash; <b>2-col tree</b></div>
+    </div>
+  </div>
+
+  <div class="frame">
+    <div class="chrome"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">al-maktaba.ru/b/2256</span></div>
+    <div class="app">
+
+      <header class="app-top">
+        <div class="brand-mark">al-maktaba <span class="glyph">المكتبة</span></div>
+        <nav class="nav">
+          <a href="#">главная</a>
+          <a href="#" class="on">каталог</a>
+          <a href="#">авторы</a>
+          <a href="#">недавние</a>
+          <a href="#">моё</a>
+        </nav>
+        <div class="util">
+          <button class="search-trig"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg> Поиск <span class="kbd">⌘K</span></button>
+          <span class="lang"><span class="on">RU</span><span>EN</span></span>
+        </div>
+      </header>
+
+      <section class="bd-head">
+        <div class="crumbs"><a href="#">главная</a> / <a href="#">каталог</a> / <a href="#"><span style="font-family:var(--arabic);direction:rtl">العقيدة والفرق</span></a> / <span style="font-family:var(--arabic);direction:rtl">صحيح البخاري</span></div>
+        <div class="grid">
+          <div class="bd-cover">
+            <div class="cv-tt">صحيح البخاري</div>
+            <div class="cv-au">محمد بن إسماعيل البخاري</div>
+          </div>
+          <div class="bd-info">
+            <div class="label">صحيح / sahih · sound</div>
+            <h1 class="ar-h1">الجامع المسند الصحيح المختصر</h1>
+            <div class="ar-au">أبو عبد الله محمد بن إسماعيل البخاري &middot; ت ٢٥٦ هـ</div>
+            <div class="actions">
+              <a class="btn btn-primary" href="#">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+                Начать чтение
+              </a>
+              <button class="btn btn-ghost"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg> В избранное</button>
+              <button class="btn btn-ghost"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg> Поделиться</button>
+            </div>
+
+            <dl class="bd-meta">
+              <dt>الناشر · издатель</dt><dd>دار طوق النجاة</dd>
+              <dt>الطبعة · издание</dt><dd>الأولى · ١٤٢٢ هـ</dd>
+              <dt>المحقق · редактор</dt><dd>محمد زهير بن ناصر الناصر</dd>
+              <dt>عدد الصفحات</dt><dd>٣٢٠٤ صفحة</dd>
+              <dt>عدد الأجزاء</dt><dd>٩ أجزاء</dd>
+              <dt>ترقيم</dt><dd>موافق للمطبوع</dd>
+            </dl>
+          </div>
+        </div>
+      </section>
+
+      <section class="bd-toc">
+        <div class="label">оглавление <span class="ar">فهرس الموضوعات &middot; ٩٧ بابًا</span></div>
+        <div class="bd-toc-grid">
+          <a href="#"><span>المقدمة</span><span class="pg">p.1</span></a>
+          <a href="#"><span>كتاب بدء الوحي</span><span class="pg">p.3</span></a>
+          <a href="#" class="indent"><span>باب كيف كان بدء الوحي</span><span class="pg">p.3</span></a>
+          <a href="#" class="indent"><span>باب فضل العلم على العبادة</span><span class="pg">p.87</span></a>
+          <a href="#"><span>كتاب الإيمان</span><span class="pg">p.105</span></a>
+          <a href="#" class="indent"><span>باب أمور الإيمان</span><span class="pg">p.108</span></a>
+          <a href="#"><span>كتاب العلم</span><span class="pg">p.142</span></a>
+          <a href="#" class="indent"><span>باب طلب العلم</span><span class="pg">p.144</span></a>
+          <a href="#"><span>كتاب الوضوء</span><span class="pg">p.198</span></a>
+          <a href="#"><span>كتاب الغسل</span><span class="pg">p.276</span></a>
+          <a href="#"><span>كتاب الحيض</span><span class="pg">p.301</span></a>
+          <a href="#"><span>كتاب التيمم</span><span class="pg">p.327</span></a>
+          <a href="#"><span>كتاب الصلاة</span><span class="pg">p.350</span></a>
+          <a href="#"><span>كتاب الزكاة</span><span class="pg">p.512</span></a>
+          <a href="#"><span>كتاب الحج</span><span class="pg">p.580</span></a>
+          <a href="#"><span>كتاب الصوم</span><span class="pg">p.690</span></a>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</section>
+
+<!-- ===== 4 · READER ===== -->
+<section class="scene" id="reader">
+  <div class="scene-head">
+    <div>
+      <div class="label">экран 04 · reader · 3 темы</div>
+      <h2>Читалка. <em>Сердце&nbsp;продукта.</em></h2>
+      <p class="desc">Сайдбар с&nbsp;оглавлением, узкая колонка Amiri 21px / 1.95. Тонкий прогресс-бар сверху. Контекстное меню при&nbsp;выделении. Три&nbsp;темы &mdash; light, sepia, dark.</p>
+    </div>
+    <div class="meta">
+      <div>route &mdash; <b>/b/2256/p/87</b></div>
+      <div>column &mdash; <b>680px max</b></div>
+      <div>type &mdash; <b>Amiri 21/1.95</b></div>
+    </div>
+  </div>
+
+  <div style="max-width:1180px;margin:0 auto 16px;display:flex;align-items:center;justify-content:flex-end;gap:14px">
+    <span style="font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3)">тема:</span>
+    <div class="theme-pick">
+      <span class="on">light</span>
+      <span>sepia</span>
+      <span>dark</span>
+    </div>
+  </div>
+
+  <div class="frame">
+    <div class="chrome"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">al-maktaba.ru/b/2256/p/87</span></div>
+    <div class="reader light">
+
+      <header class="r-header">
+        <a class="r-back" href="#">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="m15 18-6-6 6-6"/></svg>
+          к карточке книги
+        </a>
+        <div class="r-titles">
+          <div class="t">صحيح البخاري</div>
+          <div class="a">محمد بن إسماعيل البخاري</div>
+        </div>
+        <div class="r-tools">
+          <button class="r-tool" title="закладка">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+          </button>
+          <button class="r-tool"><span class="lbl">A−</span></button>
+          <button class="r-tool"><span class="lbl">A+</span></button>
+          <button class="r-tool on" title="огласовки"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg></button>
+          <button class="r-tool" title="сепия"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18z" fill="currentColor"/></svg></button>
+          <button class="r-tool" title="поиск в книге"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg></button>
+          <button class="r-tool" title="ещё"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg></button>
+        </div>
+      </header>
+      <div class="r-bar"></div>
+
+      <aside class="r-side">
+        <div class="r-side-h">оглавление <span class="pages">٨٧ / ٣٢٠٤</span></div>
+        <div class="r-toc-h">فصول الكتاب</div>
+        <nav class="toc">
+          <a href="#"><span>المقدمة</span><span class="p">3</span></a>
+          <a href="#"><span>كتاب بدء الوحي</span><span class="p">3</span></a>
+          <a href="#" class="in"><span>باب كيف كان بدء الوحي</span><span class="p">3</span></a>
+          <a href="#" class="in on"><span>باب فضل العلم على العبادة</span><span class="p">87</span></a>
+          <a href="#" class="in"><span>باب من سُئل علماً</span><span class="p">91</span></a>
+          <a href="#"><span>كتاب الإيمان</span><span class="p">105</span></a>
+          <a href="#"><span>كتاب العلم</span><span class="p">142</span></a>
+          <a href="#"><span>كتاب الوضوء</span><span class="p">198</span></a>
+          <a href="#"><span>كتاب الغسل</span><span class="p">276</span></a>
+          <a href="#"><span>كتاب الحيض</span><span class="p">301</span></a>
+          <a href="#"><span>كتاب الصلاة</span><span class="p">350</span></a>
+          <a href="#"><span>كتاب الزكاة</span><span class="p">512</span></a>
+        </nav>
+      </aside>
+
+      <main class="r-content">
+        <div class="crumb-line">
+          <span>стр. ٨٧</span><span class="d"></span>
+          <span>часть ١</span><span class="d"></span>
+          <span class="ar">كتاب بدء الوحي · باب فضل العلم على العبادة</span>
+        </div>
+
+        <article class="page">
+          <h3>باب فضل العلم على العبادة</h3>
+          <div class="basmala">بسم الله الرحمن الرحيم</div>
+          <p>قال الإمام البخاري رحمه الله تعالى: حدثنا عبد الله بن يوسف، قال: حدثنا مالك، عن نافع، عن عبد الله بن عمر رضي الله عنهما، أن رسول الله ﷺ قال: «<mark>إنما مَثَلُ الذي يَحفَظُ القرآنَ، كمَثَلِ صاحبِ الإبلِ المُعَقَّلَة</mark>، إن عاهدها أمسكها، وإن أطلقها ذهبت».</p>
+          <p>وعن أبي موسى الأشعري رضي الله عنه قال: قال رسول الله ﷺ: «مَثَلُ ما بَعَثَني الله به من الهدى والعلم، كمَثَلِ الغَيث الكَثير، أصاب أرضاً، فكان منها نَقِيَّةٌ قَبِلَت الماءَ، فأنبَتَت الكَلأَ والعُشبَ الكثير».</p>
+          <p>قال ابن حجر رحمه الله في «فتح الباري»: قوله «فضل العلم» أي تفضيله على غيره من العبادات. والمراد بالعلم هنا علم الكتاب والسنة، الذي يَهدي إلى معرفة الله وإلى عبادته على بصيرة.</p>
+        </article>
+
+        <div class="selection">
+          <button>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            копировать
+          </button>
+          <span class="div"></span>
+          <button>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            заметка
+          </button>
+          <span class="div"></span>
+          <button>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+            ссылка
+          </button>
+        </div>
+      </main>
+
+      <div class="r-paginate">
+        <button title="первая"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="m11 17-5-5 5-5M18 17l-5-5 5-5"/></svg></button>
+        <button title="назад"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="m15 18-6-6 6-6"/></svg></button>
+        <input type="text" value="٨٧">
+        <span class="of">/ ٣٢٠٤</span>
+        <button title="вперёд"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="m9 18 6-6-6-6"/></svg></button>
+        <button title="последняя"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="m13 17 5-5-5-5M6 17l5-5-5-5"/></svg></button>
+        <button class="go">اذهب</button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- sepia variant -->
+  <div style="max-width:1180px;margin:48px auto 16px;display:flex;align-items:center;justify-content:flex-end;gap:14px">
+    <span style="font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3)">тема:</span>
+    <div class="theme-pick"><span>light</span><span class="on">sepia</span><span>dark</span></div>
+  </div>
+  <div class="frame">
+    <div class="chrome"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">al-maktaba.ru/b/2256/p/87 · sepia</span></div>
+    <div class="reader sepia">
+      <header class="r-header">
+        <a class="r-back" href="#"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="m15 18-6-6 6-6"/></svg> к карточке книги</a>
+        <div class="r-titles"><div class="t">صحيح البخاري</div><div class="a">محمد بن إسماعيل البخاري</div></div>
+        <div class="r-tools">
+          <button class="r-tool"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></button>
+          <button class="r-tool"><span class="lbl">A−</span></button>
+          <button class="r-tool"><span class="lbl">A+</span></button>
+          <button class="r-tool on"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18z" fill="currentColor"/></svg></button>
+          <button class="r-tool"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg></button>
+        </div>
+      </header>
+      <div class="r-bar"></div>
+      <aside class="r-side">
+        <div class="r-side-h">оглавление <span class="pages">٨٧ / ٣٢٠٤</span></div>
+        <div class="r-toc-h">فصول الكتاب</div>
+        <nav class="toc">
+          <a href="#"><span>كتاب بدء الوحي</span><span class="p">3</span></a>
+          <a href="#" class="in on"><span>باب فضل العلم</span><span class="p">87</span></a>
+          <a href="#" class="in"><span>باب من سُئل علماً</span><span class="p">91</span></a>
+          <a href="#"><span>كتاب الإيمان</span><span class="p">105</span></a>
+          <a href="#"><span>كتاب العلم</span><span class="p">142</span></a>
+          <a href="#"><span>كتاب الصلاة</span><span class="p">350</span></a>
+        </nav>
+      </aside>
+      <main class="r-content">
+        <div class="crumb-line"><span>стр. ٨٧</span><span class="d"></span><span class="ar">باب فضل العلم على العبادة</span></div>
+        <article class="page">
+          <h3>باب فضل العلم على العبادة</h3>
+          <div class="basmala">بسم الله الرحمن الرحيم</div>
+          <p>قال الإمام البخاري رحمه الله تعالى: حدثنا عبد الله بن يوسف، قال: حدثنا مالك، عن نافع، عن عبد الله بن عمر رضي الله عنهما، أن رسول الله ﷺ قال: «<mark>إنما مَثَلُ الذي يَحفَظُ القرآنَ، كمَثَلِ صاحبِ الإبلِ المُعَقَّلَة</mark>، إن عاهدها أمسكها، وإن أطلقها ذهبت».</p>
+          <p>وعن أبي موسى الأشعري قال: قال رسول الله ﷺ: «مَثَلُ ما بَعَثَني الله به من الهدى والعلم، كمَثَلِ الغَيث الكَثير، أصاب أرضاً، فكان منها نَقِيَّةٌ قَبِلَت الماءَ، فأنبَتَت الكَلأَ والعُشبَ الكثير».</p>
+        </article>
+      </main>
+      <div class="r-paginate">
+        <button><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="m11 17-5-5 5-5M18 17l-5-5 5-5"/></svg></button>
+        <button><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="m15 18-6-6 6-6"/></svg></button>
+        <input type="text" value="٨٧"><span class="of">/ ٣٢٠٤</span>
+        <button><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="m9 18 6-6-6-6"/></svg></button>
+        <button><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="m13 17 5-5-5-5M6 17l5-5-5-5"/></svg></button>
+        <button class="go">اذهب</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- dark variant -->
+  <div style="max-width:1180px;margin:48px auto 16px;display:flex;align-items:center;justify-content:flex-end;gap:14px">
+    <span style="font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3)">тема:</span>
+    <div class="theme-pick"><span>light</span><span>sepia</span><span class="on">dark</span></div>
+  </div>
+  <div class="frame">
+    <div class="chrome"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">al-maktaba.ru/b/2256/p/87 · dark</span></div>
+    <div class="reader dark">
+      <header class="r-header">
+        <a class="r-back" href="#"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="m15 18-6-6 6-6"/></svg> к карточке книги</a>
+        <div class="r-titles"><div class="t">صحيح البخاري</div><div class="a">محمد بن إسماعيل البخاري</div></div>
+        <div class="r-tools">
+          <button class="r-tool on"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.6"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></button>
+          <button class="r-tool"><span class="lbl">A−</span></button>
+          <button class="r-tool"><span class="lbl">A+</span></button>
+          <button class="r-tool"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg></button>
+          <button class="r-tool"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></button>
+          <button class="r-tool"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg></button>
+        </div>
+      </header>
+      <div class="r-bar"></div>
+      <aside class="r-side">
+        <div class="r-side-h">оглавление <span class="pages">٨٧ / ٣٢٠٤</span></div>
+        <div class="r-toc-h">فصول الكتاب</div>
+        <nav class="toc">
+          <a href="#"><span>كتاب بدء الوحي</span><span class="p">3</span></a>
+          <a href="#" class="in on"><span>باب فضل العلم</span><span class="p">87</span></a>
+          <a href="#" class="in"><span>باب من سُئل علماً</span><span class="p">91</span></a>
+          <a href="#"><span>كتاب الإيمان</span><span class="p">105</span></a>
+          <a href="#"><span>كتاب العلم</span><span class="p">142</span></a>
+          <a href="#"><span>كتاب الصلاة</span><span class="p">350</span></a>
+        </nav>
+      </aside>
+      <main class="r-content">
+        <div class="crumb-line"><span>стр. ٨٧</span><span class="d"></span><span class="ar">باب فضل العلم على العبادة</span></div>
+        <article class="page">
+          <h3>باب فضل العلم على العبادة</h3>
+          <div class="basmala">بسم الله الرحمن الرحيم</div>
+          <p>قال الإمام البخاري رحمه الله تعالى: حدثنا عبد الله بن يوسف، قال: حدثنا مالك، عن نافع، عن عبد الله بن عمر رضي الله عنهما، أن رسول الله ﷺ قال: «<mark>إنما مَثَلُ الذي يَحفَظُ القرآنَ، كمَثَلِ صاحبِ الإبلِ المُعَقَّلَة</mark>، إن عاهدها أمسكها، وإن أطلقها ذهبت».</p>
+          <p>وعن أبي موسى الأشعري قال: قال رسول الله ﷺ: «مَثَلُ ما بَعَثَني الله به من الهدى والعلم، كمَثَلِ الغَيث الكَثير، أصاب أرضاً، فكان منها نَقِيَّةٌ قَبِلَت الماءَ، فأنبَتَت الكَلأَ والعُشبَ الكثير».</p>
+        </article>
+      </main>
+      <div class="r-paginate">
+        <button><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="m11 17-5-5 5-5M18 17l-5-5 5-5"/></svg></button>
+        <button><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="m15 18-6-6 6-6"/></svg></button>
+        <input type="text" value="٨٧"><span class="of">/ ٣٢٠٤</span>
+        <button><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="m9 18 6-6-6-6"/></svg></button>
+        <button><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="m13 17 5-5-5-5M6 17l5-5-5-5"/></svg></button>
+        <button class="go">اذهب</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+</body>
+</html>

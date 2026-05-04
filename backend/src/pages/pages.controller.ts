@@ -1,0 +1,30 @@
+import { Controller, Get, Param, ParseIntPipe, Query } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiQuery } from '@nestjs/swagger';
+import { PagesService } from './pages.service';
+
+@ApiTags('pages')
+@Controller('books/:bookId/pages')
+export class PagesController {
+  constructor(private readonly pagesService: PagesService) {}
+
+  @Get()
+  @ApiOperation({ summary: 'Страницы книги с пагинацией' })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  @ApiQuery({ name: 'offset', required: false, type: Number })
+  findByBook(
+    @Param('bookId', ParseIntPipe) bookId: number,
+    @Query('limit') limit = 1,
+    @Query('offset') offset = 0,
+  ) {
+    return this.pagesService.findByBook(bookId, +limit, +offset);
+  }
+
+  @Get(':shamelaId')
+  @ApiOperation({ summary: 'Конкретная страница по Shamela ID' })
+  findOne(
+    @Param('bookId', ParseIntPipe) bookId: number,
+    @Param('shamelaId', ParseIntPipe) shamelaId: number,
+  ) {
+    return this.pagesService.findOne(bookId, shamelaId);
+  }
+}

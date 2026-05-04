@@ -1,0 +1,42 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build
+dist/
+build/
+.next/
+out/
+
+# Environment — секреты не в репо
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# Claude / AI tooling
+.brief/
+.claude/
+.playwright-mcp/
+
+# Temp / screenshots
+shamela-*.png
+shamela-*.md
+*.mp4
+*.pdf
+
+# Drizzle migrations snapshot (генерируется)
+backend/drizzle/meta/
