@@ -2,27 +2,20 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, BookOpen, Users, Calendar, Hash } from "lucide-react";
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001/api";
 
-type Author = { id: number; name: string; deathNumber: string | null };
+type Author   = { id: number; name: string; deathNumber: string | null };
 type Category = { id: number; name: string };
-type Book = {
-  id: number;
-  name: string;
+type Book     = {
+  id: number; name: string; date: string | null;
+  bibliography: string | null; hint: string | null;
+  pagesCount: number;
   authors: Author[];
   category: Category | null;
-  pagesCount: number;
-  date: string | null;
-  bibliography: string | null;
-  hint: string | null;
 };
-type PageItem = {
-  id: number;
-  shamelaId: number;
-  content: string;
-};
+type TocItem = { shamelaId: number; title: string };
 
 async function fetchBook(id: string): Promise<Book | null> {
   const res = await fetch(`${API}/books/${id}`, { next: { revalidate: 3600 } });
@@ -30,195 +23,182 @@ async function fetchBook(id: string): Promise<Book | null> {
   return res.json();
 }
 
-async function fetchFirstPages(bookId: string): Promise<PageItem[]> {
-  const res = await fetch(`${API}/books/${bookId}/pages?limit=5&offset=0`, {
-    next: { revalidate: 3600 },
-  });
+async function fetchToc(id: string): Promise<TocItem[]> {
+  const res = await fetch(`${API}/books/${id}/pages/toc`, { next: { revalidate: 3600 } });
   if (!res.ok) return [];
-  const data = await res.json();
-  return data.items ?? [];
+  return res.json();
 }
 
-function extractToc(pages: PageItem[]): { shamelaId: number; title: string }[] {
-  const toc: { shamelaId: number; title: string }[] = [];
-  for (const p of pages) {
-    const matches = [...p.content.matchAll(/<span[^>]+data-type=['"]title['"][^>]*>([^<]+)<\/span>/g)];
-    for (const m of matches) {
-      toc.push({ shamelaId: p.shamelaId, title: m[1].trim() });
+// Парсим строку библиографии вида "الكتاب: ...\nالمؤلف: ..."
+function parseBiblio(raw: string | null): Record<string, string> {
+  if (!raw) return {};
+  const map: Record<string, string> = {};
+  for (const line of raw.split(/\n/)) {
+    const idx = line.indexOf(':');
+    if (idx > 0) {
+      const key = line.slice(0, idx).trim();
+      const val = line.slice(idx + 1).trim();
+      if (key && val) map[key] = val;
     }
   }
-  return toc;
-}
-
-function cleanPreview(content: string): string {
-  return content
-    .replace(/<[^>]+>/g, " ")
-    .replace(/\s+/g, " ")
-    .trim()
-    .slice(0, 200);
+  return map;
 }
 
 export default async function BookPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const [book, firstPages] = await Promise.all([fetchBook(id), fetchFirstPages(id)]);
+  const [book, toc] = await Promise.all([fetchBook(id), fetchToc(id)]);
   if (!book) notFound();
 
-  const toc = extractToc(firstPages);
-  const preview = firstPages[0] ? cleanPreview(firstPages[0].content) : null;
+  const biblio = parseBiblio(book.bibliography);
+
+  // Показываем первые 50 заголовков в оглавлении на этой странице
+  const tocPreview = toc.slice(0, 50);
+  const tocHasMore = toc.length > 50;
 
   return (
     <>
       <Header />
-      <main id="main-content" className="flex-1">
-        <div className="max-w-[960px] mx-auto px-6">
+      <main id="main-content" className="flex-1 bg-[var(--bg)]">
+        <div className="max-w-[1024px] mx-auto px-6">
 
           {/* Breadcrumb */}
-          <nav className="flex items-center gap-1.5 pt-8 pb-6 text-[12px] font-[family-name:var(--font-geist-mono)] text-[var(--text-3)]">
+          <nav className="flex items-center gap-1.5 pt-7 pb-5 text-[11px] font-[family-name:var(--font-geist-mono)] text-[var(--text-3)] flex-wrap">
             <Link href="/" className="hover:text-[var(--text-1)] transition-colors">Главная</Link>
-            <ChevronRight size={12} />
+            <ChevronRight size={11} strokeWidth={2} />
             <Link href="/catalog" className="hover:text-[var(--text-1)] transition-colors">Каталог</Link>
-            <ChevronRight size={12} />
-            <span className="text-[var(--text-2)] truncate max-w-[260px]" lang="ar" dir="rtl">{book.name}</span>
+            {book.category && (
+              <>
+                <ChevronRight size={11} strokeWidth={2} />
+                <Link href={`/catalog?cat=${book.category.id}`} className="hover:text-[var(--text-1)] transition-colors">
+                  {book.category.name}
+                </Link>
+              </>
+            )}
           </nav>
 
-          {/* Book header */}
-          <div className="pb-8 border-b border-[var(--border)]">
-            {book.category && (
-              <Link
-                href={`/catalog?cat=${book.category.id}`}
-                className="inline-block font-[family-name:var(--font-geist-mono)] text-[10px] uppercase tracking-[.14em] text-[var(--text-3)] mb-3 hover:text-[var(--text-1)] transition-colors"
-              >
-                {book.category.name}
-              </Link>
+          {/* ── Main card ── */}
+          <div className="border border-[var(--border)] rounded-[var(--radius)] bg-[var(--surface)] overflow-hidden mb-6">
+
+            {/* Header */}
+            <div className="px-8 pt-8 pb-6 border-b border-[var(--border)]">
+              <h1 lang="ar" dir="rtl"
+                className="font-[family-name:var(--font-amiri)] text-[28px] font-bold text-[var(--text-1)] leading-[1.5] mb-3">
+                {book.name}
+              </h1>
+
+              {/* Authors */}
+              <div className="flex flex-wrap gap-x-3 gap-y-1 mb-5" dir="rtl">
+                {book.authors.map((a) => (
+                  <Link key={a.id} href={`/authors/${a.id}`}
+                    className="inline-flex items-center gap-2 font-[family-name:var(--font-amiri)] text-[16px] text-[var(--text-2)] hover:text-[var(--text-1)] transition-colors">
+                    {a.name}
+                    {a.deathNumber && parseInt(a.deathNumber) > 0 && parseInt(a.deathNumber) < 9999 && (
+                      <span className="text-[13px] text-[var(--text-3)]">ت. {a.deathNumber} هـ</span>
+                    )}
+                  </Link>
+                ))}
+              </div>
+
+              {/* Stats pills */}
+              <div className="flex items-center gap-2 flex-wrap">
+                {book.pagesCount > 0 && (
+                  <span className="inline-flex items-center gap-1.5 h-7 px-3 rounded-full border border-[var(--border)] bg-[var(--surface-2)] font-[family-name:var(--font-geist-mono)] text-[11px] text-[var(--text-2)]">
+                    <Hash size={11} className="text-[var(--text-3)]" />
+                    {book.pagesCount.toLocaleString("ru")} страниц
+                  </span>
+                )}
+                {book.date && parseInt(book.date) > 0 && parseInt(book.date) < 9999 && (
+                  <span className="inline-flex items-center gap-1.5 h-7 px-3 rounded-full border border-[var(--border)] bg-[var(--surface-2)] font-[family-name:var(--font-geist-mono)] text-[11px] text-[var(--text-2)]">
+                    <Calendar size={11} className="text-[var(--text-3)]" />
+                    {book.date} هـ
+                  </span>
+                )}
+                {book.category && (
+                  <Link href={`/catalog?cat=${book.category.id}`}
+                    className="inline-flex items-center gap-1.5 h-7 px-3 rounded-full border border-[var(--border)] bg-[var(--surface-2)] font-[family-name:var(--font-amiri)] text-[13px] text-[var(--text-2)] hover:bg-[var(--surface-3,var(--surface-2))] transition-colors"
+                    lang="ar" dir="rtl">
+                    {book.category.name}
+                  </Link>
+                )}
+              </div>
+            </div>
+
+            {/* Bibliography table */}
+            {Object.keys(biblio).length > 0 && (
+              <div className="px-8 py-5 border-b border-[var(--border)] bg-[var(--surface-2)]">
+                <p className="font-[family-name:var(--font-geist-mono)] text-[9.5px] uppercase tracking-[.14em] text-[var(--text-3)] mb-3">
+                  Сведения об издании
+                </p>
+                <dl className="grid gap-y-2" dir="rtl">
+                  {Object.entries(biblio).map(([key, val]) => (
+                    <div key={key} className="flex gap-3 items-baseline">
+                      <dt className="font-[family-name:var(--font-amiri)] text-[13px] text-[var(--text-3)] whitespace-nowrap flex-shrink-0 min-w-[100px]">
+                        {key}:
+                      </dt>
+                      <dd className="font-[family-name:var(--font-amiri)] text-[14px] text-[var(--text-1)] leading-snug">
+                        {val}
+                      </dd>
+                    </div>
+                  ))}
+                </dl>
+              </div>
             )}
 
-            <h1
-              lang="ar"
-              dir="rtl"
-              className="font-[family-name:var(--font-amiri)] text-[32px] font-bold text-[var(--text-1)] leading-snug mb-4"
-            >
-              {book.name}
-            </h1>
-
-            {/* Authors */}
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mb-6">
-              {book.authors.map((a) => (
-                <span key={a.id} className="flex items-center gap-2">
-                  <span lang="ar" dir="rtl" className="font-[family-name:var(--font-amiri)] text-[17px] text-[var(--text-2)]">
-                    {a.name}
-                  </span>
-                  {a.deathNumber && parseInt(a.deathNumber) > 0 && (
-                    <span className="font-[family-name:var(--font-amiri)] text-[13px] text-[var(--text-3)]" dir="rtl">
-                      ت. {a.deathNumber} هـ
-                    </span>
-                  )}
-                </span>
-              ))}
-            </div>
-
-            {/* Stats row */}
-            <div className="flex items-center gap-px overflow-hidden rounded-[var(--radius-sm)] border border-[var(--border)] w-fit">
-              {[
-                { label: "Страниц", value: book.pagesCount.toLocaleString("ru") },
-                ...(book.date && parseInt(book.date) > 0 && parseInt(book.date) < 9999
-                  ? [{ label: "Год (хидж.)", value: book.date + " هـ" }]
-                  : []),
-                ...(book.category ? [{ label: "Раздел", value: book.category.name }] : []),
-              ].map((s, i) => (
-                <div key={i} className="px-4 py-2.5 bg-[var(--surface-2)] border-r border-[var(--border)] last:border-r-0">
-                  <div className="font-[family-name:var(--font-geist-mono)] text-[9px] uppercase tracking-[.12em] text-[var(--text-3)] mb-0.5">
-                    {s.label}
-                  </div>
-                  <div
-                    className="font-[family-name:var(--font-geist-mono)] text-[14px] font-medium text-[var(--text-1)]"
-                    lang={s.label === "Раздел" ? "ar" : undefined}
-                    dir={s.label === "Раздел" ? "rtl" : undefined}
-                  >
-                    {s.value}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Preview + Actions */}
-          <div className="py-8 border-b border-[var(--border)] grid grid-cols-[1fr_auto] gap-8 items-start">
-            <div>
-              {preview && (
-                <p
-                  lang="ar"
-                  dir="rtl"
-                  className="font-[family-name:var(--font-amiri)] text-[16px] text-[var(--text-2)] leading-[1.9] line-clamp-4"
-                >
-                  {preview}…
-                </p>
+            {/* CTA */}
+            <div className="px-8 py-5 flex items-center gap-3">
+              <Link href={`/books/${book.id}/pages/1`}
+                className="inline-flex items-center gap-2 h-10 px-6 rounded-[var(--radius-sm)] bg-[var(--text-1)] text-white text-[13px] font-medium hover:opacity-90 transition-opacity">
+                <BookOpen size={14} />
+                Читать книгу
+              </Link>
+              {book.authors[0] && (
+                <Link href={`/authors/${book.authors[0].id}`}
+                  className="inline-flex items-center gap-2 h-10 px-5 rounded-[var(--radius-sm)] border border-[var(--border)] text-[13px] text-[var(--text-2)] hover:bg-[var(--surface-2)] transition-colors">
+                  <Users size={13} />
+                  Все книги автора
+                </Link>
               )}
             </div>
-            <div className="flex flex-col gap-2 min-w-[160px]">
-              <Link
-                href={`/books/${book.id}/pages/1`}
-                className="flex items-center justify-center gap-2 h-10 px-5 rounded-[var(--radius-sm)] bg-[var(--text-1)] text-white text-[13px] font-medium hover:opacity-90 transition-opacity"
-              >
-                Читать книгу →
-              </Link>
-              <Link
-                href={`/catalog?cat=${book.category?.id}`}
-                className="flex items-center justify-center h-10 px-5 rounded-[var(--radius-sm)] border border-[var(--border)] text-[13px] text-[var(--text-2)] hover:bg-[var(--surface-2)] transition-colors"
-              >
-                Все книги раздела
-              </Link>
-            </div>
           </div>
 
-          {/* TOC or page list */}
-          <div className="py-8">
-            <h2 className="font-[family-name:var(--font-geist-mono)] text-[10px] uppercase tracking-[.14em] text-[var(--text-3)] mb-4">
-              {toc.length > 0 ? "Содержание" : "Начало книги"}
-            </h2>
+          {/* ── Table of contents ── */}
+          {toc.length > 0 && (
+            <div className="border border-[var(--border)] rounded-[var(--radius)] bg-[var(--surface)] overflow-hidden mb-10">
+              <div className="px-6 py-4 border-b border-[var(--border)] flex items-center justify-between">
+                <h2 className="font-[family-name:var(--font-geist-mono)] text-[10px] uppercase tracking-[.14em] text-[var(--text-3)]">
+                  Оглавление
+                </h2>
+                <span className="font-[family-name:var(--font-geist-mono)] text-[10px] text-[var(--text-3)]">
+                  {toc.length.toLocaleString("ru")} разделов
+                </span>
+              </div>
 
-            {toc.length > 0 ? (
-              <div className="flex flex-col divide-y divide-[var(--border)] border border-[var(--border)] rounded-[var(--radius)]">
-                {toc.map((item, i) => (
-                  <Link
-                    key={i}
+              <div className="divide-y divide-[var(--border)]">
+                {tocPreview.map((item, i) => (
+                  <Link key={`${item.shamelaId}-${i}`}
                     href={`/books/${book.id}/pages/${item.shamelaId}`}
-                    className="flex items-center justify-between gap-4 px-4 py-3 hover:bg-[var(--surface-2)] transition-colors group"
-                  >
-                    <span
-                      lang="ar"
-                      dir="rtl"
-                      className="font-[family-name:var(--font-amiri)] text-[15px] text-[var(--text-1)] group-hover:text-[var(--text-1)]"
-                    >
+                    className="flex items-center justify-between gap-4 px-6 py-3 hover:bg-[var(--surface-2)] transition-colors group">
+                    <span lang="ar" dir="rtl"
+                      className="font-[family-name:var(--font-amiri)] text-[15px] text-[var(--text-1)] leading-snug">
                       {item.title}
                     </span>
-                    <ChevronRight size={14} className="text-[var(--text-3)] flex-shrink-0 group-hover:text-[var(--text-1)] transition-colors" />
-                  </Link>
-                ))}
-              </div>
-            ) : (
-              <div className="flex flex-col divide-y divide-[var(--border)] border border-[var(--border)] rounded-[var(--radius)]">
-                {firstPages.map((p, i) => (
-                  <Link
-                    key={p.id}
-                    href={`/books/${book.id}/pages/${p.shamelaId}`}
-                    className="flex items-center gap-4 px-4 py-3 hover:bg-[var(--surface-2)] transition-colors group"
-                  >
-                    <span className="font-[family-name:var(--font-geist-mono)] text-[11px] text-[var(--text-3)] w-6 text-right flex-shrink-0">
-                      {i + 1}
+                    <span className="font-[family-name:var(--font-geist-mono)] text-[10px] text-[var(--text-3)] flex-shrink-0 group-hover:text-[var(--text-2)] transition-colors">
+                      с. {item.shamelaId}
                     </span>
-                    <p
-                      lang="ar"
-                      dir="rtl"
-                      className="font-[family-name:var(--font-amiri)] text-[14px] text-[var(--text-2)] truncate flex-1"
-                    >
-                      {cleanPreview(p.content)}
-                    </p>
-                    <ChevronRight size={14} className="text-[var(--text-3)] flex-shrink-0" />
                   </Link>
                 ))}
+
+                {tocHasMore && (
+                  <div className="px-6 py-4 text-center">
+                    <Link href={`/books/${book.id}/pages/1`}
+                      className="font-[family-name:var(--font-geist-mono)] text-[11px] text-[var(--text-3)] hover:text-[var(--text-1)] transition-colors">
+                      + ещё {(toc.length - 50).toLocaleString("ru")} разделов → открыть в читалке
+                    </Link>
+                  </div>
+                )}
               </div>
-            )}
-          </div>
+            </div>
+          )}
 
         </div>
       </main>

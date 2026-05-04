@@ -19,6 +19,12 @@ export class PagesController {
     return this.pagesService.findByBook(bookId, +limit, +offset);
   }
 
+  @Get('toc')
+  @ApiOperation({ summary: 'Оглавление книги — все заголовки с номерами страниц' })
+  getToc(@Param('bookId', ParseIntPipe) bookId: number) {
+    return this.pagesService.getToc(bookId);
+  }
+
   @Get(':shamelaId')
   @ApiOperation({ summary: 'Конкретная страница по Shamela ID' })
   findOne(

@@ -37,6 +37,30 @@ export class PagesService {
     return page;
   }
 
+  // Извлечение оглавления из span data-type='title' в контенте страниц
+  async getToc(bookId: number): Promise<{ shamelaId: number; title: string }[]> {
+    const rows = await this.db.execute<{ shamela_id: number; content: string }>(
+      sql`SELECT shamela_id, content FROM pages
+          WHERE book_id = ${bookId}
+            AND content LIKE '%data-type=%title%'
+          ORDER BY shamela_id`,
+    );
+
+    const toc: { shamelaId: number; title: string }[] = [];
+    const titleRe = /<span[^>]+data-type=['"]title['"][^>]*>([^<]+)<\/span>/g;
+
+    for (const row of rows) {
+      let m: RegExpExecArray | null;
+      titleRe.lastIndex = 0;
+      while ((m = titleRe.exec(row.content)) !== null) {
+        const title = m[1].trim();
+        if (title) toc.push({ shamelaId: row.shamela_id, title });
+      }
+    }
+
+    return toc;
+  }
+
   async findByPageNumber(bookId: number, pageNumber: number) {
     const page = await this.db.query.pages.findFirst({
       where: and(

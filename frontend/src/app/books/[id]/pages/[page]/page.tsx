@@ -1,33 +1,21 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { Header } from "@/components/layout/header";
-import { Footer } from "@/components/layout/footer";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ReaderSidebar } from "@/components/reader/reader-sidebar";
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001/api";
 
 type BookMeta = {
-  id: number;
-  name: string;
-  pagesCount: number;
+  id: number; name: string; pagesCount: number;
   authors: { id: number; name: string }[];
   category: { id: number; name: string } | null;
 };
-
 type PageData = {
-  id: number;
-  shamelaId: number;
-  content: string;
-  foot: string | null;
-  part: string | null;
-  page: number | null;
-  number: string | null;
+  id: number; shamelaId: number;
+  content: string; foot: string | null;
+  part: string | null; page: number | null; number: string | null;
 };
-
-type PagesResponse = {
-  items: PageData[];
-  total: number;
-};
+type TocItem = { shamelaId: number; title: string };
 
 async function fetchBook(id: string): Promise<BookMeta | null> {
   const res = await fetch(`${API}/books/${id}`, { next: { revalidate: 3600 } });
@@ -43,36 +31,22 @@ async function fetchPage(bookId: string, shamelaId: string): Promise<PageData | 
   return res.json();
 }
 
-async function fetchPageByOffset(bookId: string, offset: number): Promise<PageData | null> {
-  const res = await fetch(`${API}/books/${bookId}/pages?limit=1&offset=${offset}`, {
+async function fetchToc(bookId: string): Promise<TocItem[]> {
+  const res = await fetch(`${API}/books/${bookId}/pages/toc`, {
     next: { revalidate: 3600 },
   });
-  if (!res.ok) return null;
-  const data: PagesResponse = await res.json();
-  return data.items?.[0] ?? null;
-}
-
-async function getPageIndex(bookId: string, shamelaId: number): Promise<number> {
-  // Получаем индекс страницы (0-based) через offset поиска
-  // Используем API: берём страницы до нужного shamelaId
-  const res = await fetch(
-    `${API}/books/${bookId}/pages?limit=1&offset=0`,
-    { next: { revalidate: 3600 } }
-  );
-  if (!res.ok) return 0;
-  const data: PagesResponse = await res.json();
-  // Простой подход: shamelaId ≈ порядковый номер
-  // Точный индекс получаем через отдельный запрос
-  return shamelaId - (data.items?.[0]?.shamelaId ?? 1);
+  if (!res.ok) return [];
+  return res.json();
 }
 
 function renderContent(content: string): string {
   return content
-    .replace(/<span[^>]+data-type=['"]title['"][^>]*>([^<]+)<\/span>/g,
-      '<span class="block font-bold text-[var(--text-1)] text-[19px] mt-6 mb-2">$1</span>')
-    .replace(/<hadeeth-(\d+)>/g, '<span class="text-[var(--text-2)]">')
-    .replace(/<\/hadeeth-\d+>/g, '</span>')
-    .replace(/\n/g, '<br/>');
+    .replace(
+      /<span[^>]+data-type=['"]title['"][^>]*>([^<]+)<\/span>/g,
+      '<strong class="block text-[var(--text-1)] text-[21px] font-bold mt-8 mb-3 leading-snug" style="font-family:var(--font-amiri)">$1</strong>',
+    )
+    .replace(/<hadeeth-\d+>/g, "")
+    .replace(/<\/hadeeth-\d+>/g, "");
 }
 
 export default async function ReaderPage({
@@ -85,129 +59,126 @@ export default async function ReaderPage({
   const pageNum = parseInt(pageParam, 10);
   if (isNaN(pageNum) || pageNum < 1) notFound();
 
-  // Загружаем книгу и страницу параллельно
-  // page param = shamelaId (1-based номер страницы в книге)
-  const [book, pageData] = await Promise.all([
+  const [book, pageData, toc] = await Promise.all([
     fetchBook(id),
     fetchPage(id, pageParam),
+    fetchToc(id),
   ]);
 
   if (!book) notFound();
   if (!pageData) notFound();
 
-  // Получаем соседние страницы для навигации
-  const prevShamelaId = pageNum > 1 ? pageNum - 1 : null;
-  const nextShamelaId = pageNum < book.pagesCount ? pageNum + 1 : null;
-
+  const prevId = pageNum > 1 ? pageNum - 1 : null;
+  const nextId = pageNum < book.pagesCount ? pageNum + 1 : null;
+  const progress = book.pagesCount > 0 ? (pageNum / book.pagesCount) * 100 : 0;
   const content = renderContent(pageData.content);
   const hasFoot = pageData.foot && pageData.foot.trim().length > 0;
 
   return (
-    <>
-      <Header />
-      <main id="main-content" className="flex-1">
-        <div className="max-w-[800px] mx-auto px-6">
+    <div className="flex flex-col min-h-screen bg-[var(--bg)]">
 
-          {/* Top nav bar */}
-          <div className="flex items-center justify-between py-4 border-b border-[var(--border)]">
-            {/* Book title */}
-            <Link
-              href={`/books/${id}`}
-              className="flex items-center gap-2 min-w-0 group"
-            >
-              <ChevronLeft size={14} className="text-[var(--text-3)] flex-shrink-0 group-hover:text-[var(--text-1)] transition-colors" />
-              <span
-                lang="ar"
-                dir="rtl"
-                className="font-[family-name:var(--font-amiri)] text-[14px] text-[var(--text-2)] truncate group-hover:text-[var(--text-1)] transition-colors"
-              >
-                {book.name}
-              </span>
-            </Link>
+      {/* ── Top bar ── */}
+      <header className="sticky top-0 z-30 bg-[var(--surface)] border-b border-[var(--border)]">
+        <div className="flex items-center h-12 px-4 gap-3">
+          {/* Back to book */}
+          <Link href={`/books/${id}`}
+            className="flex items-center gap-1 text-[var(--text-3)] hover:text-[var(--text-1)] transition-colors flex-shrink-0">
+            <ChevronLeft size={16} strokeWidth={2} />
+            <span className="font-[family-name:var(--font-geist-mono)] text-[11px] hidden sm:inline">Книга</span>
+          </Link>
 
-            {/* Page counter */}
-            <span className="font-[family-name:var(--font-geist-mono)] text-[11px] text-[var(--text-3)] flex-shrink-0 ml-4">
-              {pageNum.toLocaleString("ru")} / {book.pagesCount.toLocaleString("ru")}
-            </span>
-          </div>
+          <div className="w-px h-4 bg-[var(--border)]" />
 
-          {/* Progress bar */}
-          <div className="h-[2px] bg-[var(--border)] -mx-6 mb-0">
-            <div
-              className="h-full bg-[var(--text-1)] transition-all duration-300"
-              style={{ width: `${Math.round((pageNum / book.pagesCount) * 100)}%` }}
-            />
-          </div>
+          {/* Book title */}
+          <Link href={`/books/${id}`} className="flex-1 min-w-0 group">
+            <p lang="ar" dir="rtl"
+              className="font-[family-name:var(--font-amiri)] text-[14px] text-[var(--text-2)] truncate group-hover:text-[var(--text-1)] transition-colors">
+              {book.name}
+            </p>
+          </Link>
 
-          {/* Page content */}
-          <article className="py-10">
-            {/* Part / page number metadata */}
+          {/* Page counter */}
+          <span className="flex-shrink-0 font-[family-name:var(--font-geist-mono)] text-[11px] text-[var(--text-3)] tabular-nums">
+            {pageNum.toLocaleString("ru")} / {book.pagesCount.toLocaleString("ru")}
+          </span>
+        </div>
+
+        {/* Progress bar */}
+        <div className="h-[2px] bg-[var(--border)]">
+          <div
+            className="h-full bg-[var(--text-1)] transition-all duration-500"
+            style={{ width: `${progress.toFixed(1)}%` }}
+          />
+        </div>
+      </header>
+
+      {/* ── Body: sidebar + content ── */}
+      <div className="flex flex-1 min-h-0">
+
+        {/* Sidebar (Server component передаёт toc, Client компонент управляет поведением) */}
+        <ReaderSidebar bookId={book.id} toc={toc} currentPage={pageNum} />
+
+        {/* ── Page content ── */}
+        <main className="flex-1 min-w-0 overflow-y-auto">
+          <div className="max-w-[700px] mx-auto px-6 lg:px-10 py-10">
+
+            {/* Part / page metadata */}
             {(pageData.part || pageData.page) && (
-              <div className="flex justify-end mb-6">
-                <span className="font-[family-name:var(--font-amiri)] text-[13px] text-[var(--text-3)]" dir="rtl">
-                  {pageData.part && <span>ج{pageData.part} </span>}
-                  {pageData.page && <span>ص{pageData.page}</span>}
+              <div className="flex justify-end mb-8" dir="rtl">
+                <span className="font-[family-name:var(--font-amiri)] text-[13px] text-[var(--text-3)] border border-[var(--border)] rounded px-2 py-0.5">
+                  {pageData.part && <span>ج {pageData.part} </span>}
+                  {pageData.page && <span>· ص {pageData.page}</span>}
                 </span>
               </div>
             )}
 
-            {/* Main text */}
-            <div
+            {/* Main Arabic text */}
+            <article
+              id="page-content"
               lang="ar"
               dir="rtl"
-              className="font-[family-name:var(--font-amiri)] text-[19px] leading-[2.1] text-[var(--text-1)]"
+              className="font-[family-name:var(--font-amiri)] text-[20px] leading-[2.1] text-[var(--text-1)] [word-spacing:0.05em]"
               dangerouslySetInnerHTML={{ __html: content }}
             />
 
             {/* Footnotes */}
             {hasFoot && (
-              <div className="mt-10 pt-6 border-t border-[var(--border)]">
-                <p className="font-[family-name:var(--font-geist-mono)] text-[9px] uppercase tracking-[.14em] text-[var(--text-3)] mb-3">
+              <div className="mt-12 pt-6 border-t border-[var(--border)]">
+                <p className="font-[family-name:var(--font-geist-mono)] text-[9px] uppercase tracking-[.14em] text-[var(--text-3)] mb-4">
                   Сноски
                 </p>
                 <div
-                  lang="ar"
-                  dir="rtl"
+                  lang="ar" dir="rtl"
                   className="font-[family-name:var(--font-amiri)] text-[14px] leading-[1.9] text-[var(--text-3)]"
                   dangerouslySetInnerHTML={{ __html: pageData.foot ?? "" }}
                 />
               </div>
             )}
-          </article>
 
-          {/* Bottom navigation */}
-          <div className="flex items-center justify-between py-5 border-t border-[var(--border)] mb-10">
-            {prevShamelaId ? (
-              <Link
-                href={`/books/${id}/pages/${prevShamelaId}`}
-                className="inline-flex items-center gap-2 h-9 px-4 rounded-[var(--radius-sm)] border border-[var(--border)] text-[13px] text-[var(--text-2)] hover:bg-[var(--surface-2)] hover:text-[var(--text-1)] transition-colors"
-              >
-                <ChevronLeft size={14} /> Предыдущая
-              </Link>
-            ) : (
-              <span />
-            )}
+            {/* ── Navigation ── */}
+            <div className="flex items-center justify-between mt-14 pt-6 border-t border-[var(--border)]">
+              {prevId ? (
+                <Link href={`/books/${id}/pages/${prevId}`}
+                  className="inline-flex items-center gap-2 h-9 px-4 rounded-[var(--radius-sm)] border border-[var(--border)] text-[12px] font-[family-name:var(--font-geist-mono)] text-[var(--text-2)] hover:bg-[var(--surface-2)] hover:text-[var(--text-1)] transition-colors">
+                  <ChevronLeft size={13} /> Пред.
+                </Link>
+              ) : <span />}
 
-            {/* Page number input */}
-            <span className="font-[family-name:var(--font-geist-mono)] text-[12px] text-[var(--text-3)]">
-              {pageNum} / {book.pagesCount}
-            </span>
+              <span className="font-[family-name:var(--font-geist-mono)] text-[11px] text-[var(--text-3)] tabular-nums">
+                {pageNum} / {book.pagesCount}
+              </span>
 
-            {nextShamelaId ? (
-              <Link
-                href={`/books/${id}/pages/${nextShamelaId}`}
-                className="inline-flex items-center gap-2 h-9 px-4 rounded-[var(--radius-sm)] border border-[var(--border)] text-[13px] text-[var(--text-2)] hover:bg-[var(--surface-2)] hover:text-[var(--text-1)] transition-colors"
-              >
-                Следующая <ChevronRight size={14} />
-              </Link>
-            ) : (
-              <span />
-            )}
+              {nextId ? (
+                <Link href={`/books/${id}/pages/${nextId}`}
+                  className="inline-flex items-center gap-2 h-9 px-4 rounded-[var(--radius-sm)] border border-[var(--border)] text-[12px] font-[family-name:var(--font-geist-mono)] text-[var(--text-2)] hover:bg-[var(--surface-2)] hover:text-[var(--text-1)] transition-colors">
+                  След. <ChevronRight size={13} />
+                </Link>
+              ) : <span />}
+            </div>
+
           </div>
-
-        </div>
-      </main>
-      <Footer />
-    </>
+        </main>
+      </div>
+    </div>
   );
 }
