@@ -25,6 +25,12 @@ export class PagesController {
     return this.pagesService.getToc(bookId);
   }
 
+  @Get('page-numbers')
+  @ApiOperation({ summary: 'Список всех физических номеров страниц книги' })
+  getPageNumbers(@Param('bookId', ParseIntPipe) bookId: number) {
+    return this.pagesService.getPageNumbers(bookId);
+  }
+
   @Get(':shamelaId')
   @ApiOperation({ summary: 'Конкретная страница по Shamela ID' })
   findOne(

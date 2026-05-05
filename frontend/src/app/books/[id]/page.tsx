@@ -17,7 +17,7 @@ type Book     = {
   authors: Author[];
   category: Category | null;
 };
-type TocItem = { shamelaId: number; title: string };
+type TocItem = { shamelaId: number; page: number | null; title: string };
 
 async function fetchBook(id: string): Promise<Book | null> {
   const res = await fetch(`${API}/books/${id}`, { next: { revalidate: 3600 } });
@@ -31,6 +31,19 @@ async function fetchToc(id: string): Promise<TocItem[]> {
   return res.json();
 }
 
+async function fetchFirstPage(id: string): Promise<number> {
+  const res = await fetch(`${API}/books/${id}/pages/page-numbers`, { next: { revalidate: 3600 } });
+  if (res.ok) {
+    const nums: number[] = await res.json();
+    if (nums.length > 0) return nums[0];
+  }
+  // Книга без физических номеров страниц — берём первый shamelaId
+  const res2 = await fetch(`${API}/books/${id}/pages?limit=1&offset=0`, { next: { revalidate: 3600 } });
+  if (!res2.ok) return 1;
+  const data = await res2.json();
+  return data.items?.[0]?.shamelaId ?? 1;
+}
+
 function validYear(y: string | null): string | null {
   if (!y) return null;
   const n = parseInt(y);
@@ -40,7 +53,7 @@ function validYear(y: string | null): string | null {
 
 export default async function BookPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const [book, toc] = await Promise.all([fetchBook(id), fetchToc(id)]);
+  const [book, toc, firstPage] = await Promise.all([fetchBook(id), fetchToc(id), fetchFirstPage(id)]);
   if (!book) notFound();
 
   const year = validYear(book.date);
@@ -195,7 +208,7 @@ export default async function BookPage({ params }: { params: Promise<{ id: strin
 
             {/* Кнопки */}
             <div className="px-8 py-5 flex items-center gap-3">
-              <Link href={`/books/${book.id}/pages/1`}
+              <Link href={`/books/${book.id}/pages/${firstPage}`}
                 className="inline-flex items-center gap-2 h-10 px-6 rounded-[var(--radius-sm)] bg-[var(--text-1)] text-white text-[13px] font-medium hover:opacity-90 transition-opacity">
                 <BookOpen size={14} />
                 Читать книгу
@@ -225,20 +238,20 @@ export default async function BookPage({ params }: { params: Promise<{ id: strin
               <div className="divide-y divide-[var(--border)]">
                 {tocPreview.map((item, i) => (
                   <Link key={`${item.shamelaId}-${i}`}
-                    href={`/books/${book.id}/pages/${item.shamelaId}`}
+                    href={`/books/${book.id}/pages/${item.page ?? item.shamelaId}`}
                     className="flex items-center justify-between gap-4 px-6 py-3 hover:bg-[var(--surface-2)] transition-colors group">
                     <span lang="ar" dir="rtl"
                       className="font-[family-name:var(--font-amiri)] text-[15px] text-[var(--text-1)] leading-snug">
                       {item.title}
                     </span>
                     <span className="font-[family-name:var(--font-geist-mono)] text-[10px] text-[var(--text-3)] flex-shrink-0 tabular-nums group-hover:text-[var(--text-2)] transition-colors">
-                      с. {item.shamelaId}
+                      с. {item.page ?? item.shamelaId}
                     </span>
                   </Link>
                 ))}
 
                 {tocHasMore && (
-                  <Link href={`/books/${book.id}/pages/1`}
+                  <Link href={`/books/${book.id}/pages/${firstPage}`}
                     className="flex items-center justify-center px-6 py-3 font-[family-name:var(--font-geist-mono)] text-[11px] text-[var(--text-3)] hover:text-[var(--text-1)] hover:bg-[var(--surface-2)] transition-colors">
                     + ещё {(toc.length - 50).toLocaleString("ru")} разделов → открыть в читалке
                   </Link>

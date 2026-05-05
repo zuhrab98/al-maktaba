@@ -26,27 +26,36 @@ export class PagesService {
     return { items, total, limit, offset };
   }
 
-  async findOne(bookId: number, shamelaId: number) {
-    const page = await this.db.query.pages.findFirst({
+  async findOne(bookId: number, pageNum: number) {
+    // Сначала ищем по физическому номеру страницы, затем по shamelaId
+    const byPage = await this.db.query.pages.findFirst({
       where: and(
         eq(schema.pages.bookId, bookId),
-        eq(schema.pages.shamelaId, shamelaId),
+        eq(schema.pages.page, pageNum),
       ),
     });
-    if (!page) throw new NotFoundException(`Страница не найдена`);
-    return page;
+    if (byPage) return byPage;
+
+    const byShamelaId = await this.db.query.pages.findFirst({
+      where: and(
+        eq(schema.pages.bookId, bookId),
+        eq(schema.pages.shamelaId, pageNum),
+      ),
+    });
+    if (!byShamelaId) throw new NotFoundException(`Страница не найдена`);
+    return byShamelaId;
   }
 
   // Извлечение оглавления из span data-type='title' в контенте страниц
-  async getToc(bookId: number): Promise<{ shamelaId: number; title: string }[]> {
-    const rows = await this.db.execute<{ shamela_id: number; content: string }>(
-      sql`SELECT shamela_id, content FROM pages
+  async getToc(bookId: number): Promise<{ shamelaId: number; page: number | null; title: string }[]> {
+    const rows = await this.db.execute<{ shamela_id: number; page: number | null; content: string }>(
+      sql`SELECT shamela_id, page, content FROM pages
           WHERE book_id = ${bookId}
             AND content LIKE '%data-type=%title%'
           ORDER BY shamela_id`,
     );
 
-    const toc: { shamelaId: number; title: string }[] = [];
+    const toc: { shamelaId: number; page: number | null; title: string }[] = [];
     const titleRe = /<span[^>]+data-type=['"]title['"][^>]*>([^<]+)<\/span>/g;
 
     for (const row of rows) {
@@ -54,7 +63,7 @@ export class PagesService {
       titleRe.lastIndex = 0;
       while ((m = titleRe.exec(row.content)) !== null) {
         const title = m[1].trim();
-        if (title) toc.push({ shamelaId: row.shamela_id, title });
+        if (title) toc.push({ shamelaId: row.shamela_id, page: row.page, title });
       }
     }
 
@@ -70,5 +79,24 @@ export class PagesService {
     });
     if (!page) throw new NotFoundException(`Страница ${pageNumber} не найдена`);
     return page;
+  }
+
+  // Список номеров страниц для пагинации.
+  // Если у книги есть физические номера (page) — возвращаем их,
+  // иначе возвращаем shamelaId (для книг без разметки страниц).
+  async getPageNumbers(bookId: number): Promise<number[]> {
+    const byPage = await this.db.execute<{ page: number }>(
+      sql`SELECT DISTINCT page FROM pages
+          WHERE book_id = ${bookId} AND page IS NOT NULL
+          ORDER BY page`,
+    );
+    if (byPage.length > 0) return byPage.map(r => r.page);
+
+    const byShamelaId = await this.db.execute<{ shamela_id: number }>(
+      sql`SELECT shamela_id FROM pages
+          WHERE book_id = ${bookId}
+          ORDER BY shamela_id`,
+    );
+    return byShamelaId.map(r => r.shamela_id);
   }
 }

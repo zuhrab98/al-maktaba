@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 
-type TocItem = { shamelaId: number; title: string };
+type TocItem = { shamelaId: number; page: number | null; title: string };
 
 type Props = {
   bookId: number;
@@ -26,10 +26,16 @@ export function ReaderSidebar({ bookId, toc, currentPage }: Props) {
   const activeRef = useRef<HTMLAnchorElement>(null);
   const [isOpen, setIsOpen] = useState(false);
 
-  // Скролл к активному пункту при смене страницы
   useEffect(() => {
-    if (activeRef.current && listRef.current) {
-      activeRef.current.scrollIntoView({ block: "center", behavior: "smooth" });
+    if (!activeRef.current || !listRef.current) return;
+    const container = listRef.current;
+    const item = activeRef.current;
+    const containerTop = container.scrollTop;
+    const containerBottom = containerTop + container.clientHeight;
+    const itemTop = item.offsetTop;
+    const itemBottom = itemTop + item.offsetHeight;
+    if (itemTop < containerTop || itemBottom > containerBottom) {
+      container.scrollTop = itemTop - container.clientHeight / 2 + item.offsetHeight / 2;
     }
   }, [currentPage]);
 
@@ -94,9 +100,9 @@ function TocList({
         return (
           <Link
             key={`${item.shamelaId}-${i}`}
-            href={`/books/${bookId}/pages/${item.shamelaId}`}
+            href={`/books/${bookId}/pages/${item.page ?? item.shamelaId}`}
             ref={isActive ? (activeRef as React.RefObject<HTMLAnchorElement>) : undefined}
-            onClick={onNavigate}
+            onClick={() => { window.scrollTo(0, 0); onNavigate?.(); }}
             className={[
               "flex items-start gap-2 px-4 py-2 text-right transition-colors duration-100",
               "border-l-2 border-transparent",
