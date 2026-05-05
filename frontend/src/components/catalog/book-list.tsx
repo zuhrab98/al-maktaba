@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Bookmark } from "lucide-react";
 import { useState } from "react";
+import { toArabic } from "@/lib/utils";
 
 export type Book = {
   id: number;
@@ -49,7 +50,7 @@ function BookRow({ book, index }: { book: Book; index: number }) {
       {/* год смерти */}
       <td className="w-28 px-4 py-3.5 border-r border-[var(--border)]">
         <span className="font-[family-name:var(--font-amiri)] text-[14px] text-[var(--text-2)]" dir="rtl">
-          ت. {book.deathYear} هـ
+          ت. {toArabic(book.deathYear)} هـ
         </span>
       </td>
 

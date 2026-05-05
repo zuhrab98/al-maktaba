@@ -64,7 +64,7 @@ export function ReaderSidebar({ bookId, toc, currentPage }: Props) {
       )}
 
       {/* Desktop sidebar */}
-      <aside className="hidden lg:flex flex-col w-[260px] xl:w-[280px] flex-shrink-0 border-r border-[var(--border)] bg-[var(--surface)] sticky top-0 h-screen">
+      <aside className="hidden lg:flex flex-col w-[350px] flex-shrink-0 border-r border-[var(--border)] bg-[var(--surface)] sticky top-0 h-screen">
         <div className="px-4 py-3 border-b border-[var(--border)]">
           <p className="font-[family-name:var(--font-geist-mono)] text-[9px] uppercase tracking-[.16em] text-[var(--text-3)]">
             Оглавление · {toc.length.toLocaleString("ru")}
@@ -107,7 +107,7 @@ function TocList({
             dir="rtl"
           >
             <span className={[
-              "font-[family-name:var(--font-amiri)] text-[13px] leading-snug flex-1 line-clamp-2",
+              "font-[family-name:var(--font-amiri)] text-[16px] leading-relaxed flex-1 line-clamp-2",
               isActive ? "font-bold" : "",
             ].join(" ")}>
               {item.title}

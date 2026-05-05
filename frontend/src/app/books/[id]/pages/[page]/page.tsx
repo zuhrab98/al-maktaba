@@ -46,7 +46,9 @@ function renderContent(content: string): string {
       '<strong class="block text-[var(--text-1)] text-[21px] font-bold mt-8 mb-3 leading-snug" style="font-family:var(--font-amiri)">$1</strong>',
     )
     .replace(/<hadeeth-\d+>/g, "")
-    .replace(/<\/hadeeth-\d+>/g, "");
+    .replace(/<\/hadeeth-\d+>/g, "")
+    // Подсветка аятов — текст между ﴿ и ﴾
+    .replace(/(﴿[^﴾]+﴾)/g, '<span class="quran-aya">$1</span>');
 }
 
 export default async function ReaderPage({
@@ -69,8 +71,9 @@ export default async function ReaderPage({
   if (!pageData) notFound();
 
   const prevId = pageNum > 1 ? pageNum - 1 : null;
-  const nextId = pageNum < book.pagesCount ? pageNum + 1 : null;
-  const progress = book.pagesCount > 0 ? (pageNum / book.pagesCount) * 100 : 0;
+  const nextId = pageNum + 1; // проверим существование через API — пока просто +1
+  const physPage = pageData.page ?? pageNum; // физический номер страницы
+  const progress = book.pagesCount > 0 ? (physPage / book.pagesCount) * 100 : 0;
   const content = renderContent(pageData.content);
   const hasFoot = pageData.foot && pageData.foot.trim().length > 0;
 
@@ -97,9 +100,9 @@ export default async function ReaderPage({
             </p>
           </Link>
 
-          {/* Page counter */}
-          <span className="flex-shrink-0 font-[family-name:var(--font-geist-mono)] text-[11px] text-[var(--text-3)] tabular-nums">
-            {pageNum.toLocaleString("ru")} / {book.pagesCount.toLocaleString("ru")}
+          {/* Page counter — физический номер / всего */}
+          <span className="flex-shrink-0 font-[family-name:var(--font-amiri)] text-[13px] text-[var(--text-3)]">
+            {physPage} / {book.pagesCount}
           </span>
         </div>
 
@@ -122,12 +125,12 @@ export default async function ReaderPage({
         <main className="flex-1 min-w-0 overflow-y-auto">
           <div className="max-w-[700px] mx-auto px-6 lg:px-10 py-10">
 
-            {/* Part / page metadata */}
-            {(pageData.part || pageData.page) && (
+            {/* Part — показываем только если есть номер тома */}
+            {pageData.part && (
               <div className="flex justify-end mb-8" dir="rtl">
                 <span className="font-[family-name:var(--font-amiri)] text-[13px] text-[var(--text-3)] border border-[var(--border)] rounded px-2 py-0.5">
-                  {pageData.part && <span>ج {pageData.part} </span>}
-                  {pageData.page && <span>· ص {pageData.page}</span>}
+                  ج {pageData.part}
+                  {pageData.page && <span> · ص {pageData.page}</span>}
                 </span>
               </div>
             )}
@@ -137,7 +140,7 @@ export default async function ReaderPage({
               id="page-content"
               lang="ar"
               dir="rtl"
-              className="font-[family-name:var(--font-amiri)] text-[20px] leading-[2.1] text-[var(--text-1)] [word-spacing:0.05em]"
+              className="font-[family-name:var(--font-amiri)] text-[23px] leading-[2.1] text-[var(--text-1)] [word-spacing:0.05em]"
               dangerouslySetInnerHTML={{ __html: content }}
             />
 
@@ -164,8 +167,8 @@ export default async function ReaderPage({
                 </Link>
               ) : <span />}
 
-              <span className="font-[family-name:var(--font-geist-mono)] text-[11px] text-[var(--text-3)] tabular-nums">
-                {pageNum} / {book.pagesCount}
+              <span className="font-[family-name:var(--font-amiri)] text-[14px] text-[var(--text-3)]">
+                {physPage} / {book.pagesCount}
               </span>
 
               {nextId ? (

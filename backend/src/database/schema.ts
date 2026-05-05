@@ -56,6 +56,7 @@ export const books = pgTable(
     majorRelease: integer('major_release').default(0),
     minorRelease: integer('minor_release').default(0),
     pagesCount: integer('pages_count').default(0),
+    betaka: text('betaka'),
   },
   (t) => [
     index('books_category_idx').on(t.categoryId),

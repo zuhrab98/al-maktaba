@@ -2,7 +2,8 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
-import { ChevronRight, BookOpen, Users, Calendar, Hash } from "lucide-react";
+import { ChevronRight, BookOpen, Users, Hash } from "lucide-react";
+import { toArabic } from "@/lib/utils";
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001/api";
 
@@ -11,6 +12,7 @@ type Category = { id: number; name: string };
 type Book     = {
   id: number; name: string; date: string | null;
   bibliography: string | null; hint: string | null;
+  betaka: string | null;
   pagesCount: number;
   authors: Author[];
   category: Category | null;
@@ -29,19 +31,11 @@ async function fetchToc(id: string): Promise<TocItem[]> {
   return res.json();
 }
 
-// Парсим строку библиографии вида "الكتاب: ...\nالمؤلف: ..."
-function parseBiblio(raw: string | null): Record<string, string> {
-  if (!raw) return {};
-  const map: Record<string, string> = {};
-  for (const line of raw.split(/\n/)) {
-    const idx = line.indexOf(':');
-    if (idx > 0) {
-      const key = line.slice(0, idx).trim();
-      const val = line.slice(idx + 1).trim();
-      if (key && val) map[key] = val;
-    }
-  }
-  return map;
+function validYear(y: string | null): string | null {
+  if (!y) return null;
+  const n = parseInt(y);
+  if (isNaN(n) || n <= 0 || n >= 9999) return null;
+  return y;
 }
 
 export default async function BookPage({ params }: { params: Promise<{ id: string }> }) {
@@ -49,17 +43,40 @@ export default async function BookPage({ params }: { params: Promise<{ id: strin
   const [book, toc] = await Promise.all([fetchBook(id), fetchToc(id)]);
   if (!book) notFound();
 
-  const biblio = parseBiblio(book.bibliography);
-
-  // Показываем первые 50 заголовков в оглавлении на этой странице
+  const year = validYear(book.date);
   const tocPreview = toc.slice(0, 50);
   const tocHasMore = toc.length > 50;
+
+  // Парсим betaka если есть — строки вида "الكتاب: ..." → { label, value }
+  const betakaRows: { label: string; value: string }[] = book.betaka
+    ? book.betaka.split('\n').flatMap(line => {
+        const idx = line.indexOf(':');
+        if (idx > 0) {
+          return [{ label: line.slice(0, idx).trim(), value: line.slice(idx + 1).trim() }];
+        }
+        if (line.trim()) return [{ label: '', value: line.trim() }];
+        return [];
+      })
+    : [];
+
+  // Fallback строки если betaka нет
+  const fallbackRows: { label: string; value: string; arabic?: boolean }[] = [
+    { label: "الكتاب", value: book.name, arabic: true },
+    ...book.authors.map(a => ({
+      label: "المؤلف",
+      value: a.name + (validYear(a.deathNumber) ? ` (ت ${toArabic(a.deathNumber)} هـ)` : ""),
+      arabic: true,
+    })),
+    ...(book.category ? [{ label: "التصنيف", value: book.category.name, arabic: true }] : []),
+    ...(book.pagesCount > 0 ? [{ label: "عدد الصفحات", value: String(book.pagesCount) }] : []),
+    { label: "ترقيم الكتاب", value: "موافق للمطبوع" },
+  ];
 
   return (
     <>
       <Header />
       <main id="main-content" className="flex-1 bg-[var(--bg)]">
-        <div className="max-w-[1024px] mx-auto px-6">
+        <div className="max-w-[900px] mx-auto px-6">
 
           {/* Breadcrumb */}
           <nav className="flex items-center gap-1.5 pt-7 pb-5 text-[11px] font-[family-name:var(--font-geist-mono)] text-[var(--text-3)] flex-wrap">
@@ -76,30 +93,32 @@ export default async function BookPage({ params }: { params: Promise<{ id: strin
             )}
           </nav>
 
-          {/* ── Main card ── */}
+          {/* ── Карточка книги ── */}
           <div className="border border-[var(--border)] rounded-[var(--radius)] bg-[var(--surface)] overflow-hidden mb-6">
 
-            {/* Header */}
+            {/* Шапка */}
             <div className="px-8 pt-8 pb-6 border-b border-[var(--border)]">
-              <h1 lang="ar" dir="rtl"
-                className="font-[family-name:var(--font-amiri)] text-[28px] font-bold text-[var(--text-1)] leading-[1.5] mb-3">
+              <h1
+                lang="ar" dir="rtl"
+                className="font-[family-name:var(--font-amiri)] text-[28px] font-bold text-[var(--text-1)] leading-[1.5] mb-3"
+              >
                 {book.name}
               </h1>
 
-              {/* Authors */}
-              <div className="flex flex-wrap gap-x-3 gap-y-1 mb-5" dir="rtl">
-                {book.authors.map((a) => (
+              {/* Авторы */}
+              <div className="flex flex-wrap gap-x-4 gap-y-1 mb-5" dir="rtl">
+                {book.authors.map(a => (
                   <Link key={a.id} href={`/authors/${a.id}`}
                     className="inline-flex items-center gap-2 font-[family-name:var(--font-amiri)] text-[16px] text-[var(--text-2)] hover:text-[var(--text-1)] transition-colors">
                     {a.name}
-                    {a.deathNumber && parseInt(a.deathNumber) > 0 && parseInt(a.deathNumber) < 9999 && (
-                      <span className="text-[13px] text-[var(--text-3)]">ت. {a.deathNumber} هـ</span>
+                    {validYear(a.deathNumber) && (
+                      <span className="text-[13px] text-[var(--text-3)]">ت. {toArabic(a.deathNumber)} هـ</span>
                     )}
                   </Link>
                 ))}
               </div>
 
-              {/* Stats pills */}
+              {/* Пилюли со статистикой */}
               <div className="flex items-center gap-2 flex-wrap">
                 {book.pagesCount > 0 && (
                   <span className="inline-flex items-center gap-1.5 h-7 px-3 rounded-full border border-[var(--border)] bg-[var(--surface-2)] font-[family-name:var(--font-geist-mono)] text-[11px] text-[var(--text-2)]">
@@ -107,10 +126,9 @@ export default async function BookPage({ params }: { params: Promise<{ id: strin
                     {book.pagesCount.toLocaleString("ru")} страниц
                   </span>
                 )}
-                {book.date && parseInt(book.date) > 0 && parseInt(book.date) < 9999 && (
-                  <span className="inline-flex items-center gap-1.5 h-7 px-3 rounded-full border border-[var(--border)] bg-[var(--surface-2)] font-[family-name:var(--font-geist-mono)] text-[11px] text-[var(--text-2)]">
-                    <Calendar size={11} className="text-[var(--text-3)]" />
-                    {book.date} هـ
+                {year && (
+                  <span className="inline-flex items-center gap-1.5 h-7 px-3 rounded-full border border-[var(--border)] bg-[var(--surface-2)] font-[family-name:var(--font-amiri)] text-[13px] text-[var(--text-2)]" dir="rtl">
+                    {toArabic(year)} هـ
                   </span>
                 )}
                 {book.category && (
@@ -123,28 +141,59 @@ export default async function BookPage({ params }: { params: Promise<{ id: strin
               </div>
             </div>
 
-            {/* Bibliography table */}
-            {Object.keys(biblio).length > 0 && (
-              <div className="px-8 py-5 border-b border-[var(--border)] bg-[var(--surface-2)]">
+            {/* Сведения об издании — betaka или fallback */}
+            <div className="border-b border-[var(--border)]">
+              <div className="px-8 py-4">
                 <p className="font-[family-name:var(--font-geist-mono)] text-[9.5px] uppercase tracking-[.14em] text-[var(--text-3)] mb-3">
-                  Сведения об издании
+                  Сведения о книге
                 </p>
-                <dl className="grid gap-y-2" dir="rtl">
-                  {Object.entries(biblio).map(([key, val]) => (
-                    <div key={key} className="flex gap-3 items-baseline">
-                      <dt className="font-[family-name:var(--font-amiri)] text-[13px] text-[var(--text-3)] whitespace-nowrap flex-shrink-0 min-w-[100px]">
-                        {key}:
+                <dl className="flex flex-col gap-2" dir="rtl">
+                  {betakaRows.length > 0
+                    ? betakaRows.map((row, i) => (
+                        <div key={i} className="flex items-baseline gap-3">
+                          {row.label ? (
+                            <dt className="font-[family-name:var(--font-amiri)] text-[14px] font-bold text-[var(--text-2)] whitespace-nowrap flex-shrink-0">
+                              {row.label}:
+                            </dt>
+                          ) : null}
+                          <dd lang="ar" className={[
+                            "font-[family-name:var(--font-amiri)] text-[15px] text-[var(--text-1)] leading-snug",
+                            !row.label ? "text-[var(--text-3)] text-[13px]" : "",
+                          ].join(" ")}>
+                            {row.value}
+                          </dd>
+                        </div>
+                      ))
+                    : fallbackRows.map((row, i) => (
+                        <div key={i} className="flex items-baseline gap-3">
+                          <dt className="font-[family-name:var(--font-amiri)] text-[14px] font-bold text-[var(--text-2)] whitespace-nowrap flex-shrink-0">
+                            {row.label}:
+                          </dt>
+                          <dd lang="ar" className="font-[family-name:var(--font-amiri)] text-[15px] text-[var(--text-1)] leading-snug">
+                            {row.value}
+                          </dd>
+                        </div>
+                      ))
+                  }
+                  {book.authors[0] && (
+                    <div className="flex items-baseline gap-3">
+                      <dt className="font-[family-name:var(--font-amiri)] text-[14px] font-bold text-[var(--text-2)] whitespace-nowrap flex-shrink-0">
+                        صفحة المؤلف:
                       </dt>
-                      <dd className="font-[family-name:var(--font-amiri)] text-[14px] text-[var(--text-1)] leading-snug">
-                        {val}
+                      <dd>
+                        <Link href={`/authors/${book.authors[0].id}`}
+                          className="font-[family-name:var(--font-amiri)] text-[15px] text-[var(--text-2)] hover:text-[var(--text-1)] underline underline-offset-2 transition-colors"
+                          lang="ar">
+                          [{book.authors[0].name}]
+                        </Link>
                       </dd>
                     </div>
-                  ))}
+                  )}
                 </dl>
               </div>
-            )}
+            </div>
 
-            {/* CTA */}
+            {/* Кнопки */}
             <div className="px-8 py-5 flex items-center gap-3">
               <Link href={`/books/${book.id}/pages/1`}
                 className="inline-flex items-center gap-2 h-10 px-6 rounded-[var(--radius-sm)] bg-[var(--text-1)] text-white text-[13px] font-medium hover:opacity-90 transition-opacity">
@@ -161,7 +210,7 @@ export default async function BookPage({ params }: { params: Promise<{ id: strin
             </div>
           </div>
 
-          {/* ── Table of contents ── */}
+          {/* ── Оглавление ── */}
           {toc.length > 0 && (
             <div className="border border-[var(--border)] rounded-[var(--radius)] bg-[var(--surface)] overflow-hidden mb-10">
               <div className="px-6 py-4 border-b border-[var(--border)] flex items-center justify-between">
@@ -182,19 +231,17 @@ export default async function BookPage({ params }: { params: Promise<{ id: strin
                       className="font-[family-name:var(--font-amiri)] text-[15px] text-[var(--text-1)] leading-snug">
                       {item.title}
                     </span>
-                    <span className="font-[family-name:var(--font-geist-mono)] text-[10px] text-[var(--text-3)] flex-shrink-0 group-hover:text-[var(--text-2)] transition-colors">
+                    <span className="font-[family-name:var(--font-geist-mono)] text-[10px] text-[var(--text-3)] flex-shrink-0 tabular-nums group-hover:text-[var(--text-2)] transition-colors">
                       с. {item.shamelaId}
                     </span>
                   </Link>
                 ))}
 
                 {tocHasMore && (
-                  <div className="px-6 py-4 text-center">
-                    <Link href={`/books/${book.id}/pages/1`}
-                      className="font-[family-name:var(--font-geist-mono)] text-[11px] text-[var(--text-3)] hover:text-[var(--text-1)] transition-colors">
-                      + ещё {(toc.length - 50).toLocaleString("ru")} разделов → открыть в читалке
-                    </Link>
-                  </div>
+                  <Link href={`/books/${book.id}/pages/1`}
+                    className="flex items-center justify-center px-6 py-3 font-[family-name:var(--font-geist-mono)] text-[11px] text-[var(--text-3)] hover:text-[var(--text-1)] hover:bg-[var(--surface-2)] transition-colors">
+                    + ещё {(toc.length - 50).toLocaleString("ru")} разделов → открыть в читалке
+                  </Link>
                 )}
               </div>
             </div>
