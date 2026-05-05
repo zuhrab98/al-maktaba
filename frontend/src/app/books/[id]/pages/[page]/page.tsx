@@ -1,12 +1,13 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft } from "lucide-react";
 import { ReaderSidebar } from "@/components/reader/reader-sidebar";
+import { ReaderNav } from "@/components/reader/reader-nav";
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001/api";
 
 type BookMeta = {
-  id: number; name: string; pagesCount: number;
+  id: number; name: string; pagesCount: number; chunksCount: number;
   authors: { id: number; name: string }[];
   category: { id: number; name: string } | null;
 };
@@ -71,7 +72,7 @@ export default async function ReaderPage({
   if (!pageData) notFound();
 
   const prevId = pageNum > 1 ? pageNum - 1 : null;
-  const nextId = pageNum + 1; // проверим существование через API — пока просто +1
+  const nextId = pageNum < book.chunksCount ? pageNum + 1 : pageNum;
   const physPage = pageData.page ?? pageNum; // физический номер страницы
   const progress = book.pagesCount > 0 ? (physPage / book.pagesCount) * 100 : 0;
   const content = renderContent(pageData.content);
@@ -122,7 +123,7 @@ export default async function ReaderPage({
         <ReaderSidebar bookId={book.id} toc={toc} currentPage={pageNum} />
 
         {/* ── Page content ── */}
-        <main className="flex-1 min-w-0 overflow-y-auto">
+        <main className="flex-1 min-w-0 overflow-y-auto pb-[53px]">
           <div className="max-w-[700px] mx-auto px-6 lg:px-10 py-10">
 
             {/* Part — показываем только если есть номер тома */}
@@ -158,29 +159,16 @@ export default async function ReaderPage({
               </div>
             )}
 
-            {/* ── Navigation ── */}
-            <div className="flex items-center justify-between mt-14 pt-6 border-t border-[var(--border)]">
-              {prevId ? (
-                <Link href={`/books/${id}/pages/${prevId}`}
-                  className="inline-flex items-center gap-2 h-9 px-4 rounded-[var(--radius-sm)] border border-[var(--border)] text-[12px] font-[family-name:var(--font-geist-mono)] text-[var(--text-2)] hover:bg-[var(--surface-2)] hover:text-[var(--text-1)] transition-colors">
-                  <ChevronLeft size={13} /> Пред.
-                </Link>
-              ) : <span />}
-
-              <span className="font-[family-name:var(--font-amiri)] text-[14px] text-[var(--text-3)]">
-                {physPage} / {book.pagesCount}
-              </span>
-
-              {nextId ? (
-                <Link href={`/books/${id}/pages/${nextId}`}
-                  className="inline-flex items-center gap-2 h-9 px-4 rounded-[var(--radius-sm)] border border-[var(--border)] text-[12px] font-[family-name:var(--font-geist-mono)] text-[var(--text-2)] hover:bg-[var(--surface-2)] hover:text-[var(--text-1)] transition-colors">
-                  След. <ChevronRight size={13} />
-                </Link>
-              ) : <span />}
-            </div>
-
           </div>
         </main>
+
+        <ReaderNav
+          bookId={book.id}
+          prevId={prevId}
+          nextId={nextId}
+          currentShamelaId={pageNum}
+          totalPages={book.chunksCount}
+        />
       </div>
     </div>
   );
