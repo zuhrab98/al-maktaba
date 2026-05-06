@@ -20,28 +20,22 @@ type Book     = {
 type TocItem = { shamelaId: number; page: number | null; title: string };
 
 async function fetchBook(id: string): Promise<Book | null> {
-  const res = await fetch(`${API}/books/${id}`, { next: { revalidate: 3600 } });
+  const res = await fetch(`${API}/books/${id}`);
   if (!res.ok) return null;
   return res.json();
 }
 
 async function fetchToc(id: string): Promise<TocItem[]> {
-  const res = await fetch(`${API}/books/${id}/pages/toc`, { next: { revalidate: 3600 } });
+  const res = await fetch(`${API}/books/${id}/pages/toc`);
   if (!res.ok) return [];
   return res.json();
 }
 
 async function fetchFirstPage(id: string): Promise<number> {
-  const res = await fetch(`${API}/books/${id}/pages/page-numbers`, { next: { revalidate: 3600 } });
-  if (res.ok) {
-    const nums: number[] = await res.json();
-    if (nums.length > 0) return nums[0];
-  }
-  // Книга без физических номеров страниц — берём первый shamelaId
-  const res2 = await fetch(`${API}/books/${id}/pages?limit=1&offset=0`, { next: { revalidate: 3600 } });
-  if (!res2.ok) return 1;
-  const data = await res2.json();
-  return data.items?.[0]?.shamelaId ?? 1;
+  const res = await fetch(`${API}/books/${id}/pages/page-numbers`);
+  if (!res.ok) return 1;
+  const entries: { shamelaId: number }[] = await res.json();
+  return entries[0]?.shamelaId ?? 1;
 }
 
 function validYear(y: string | null): string | null {
@@ -238,14 +232,14 @@ export default async function BookPage({ params }: { params: Promise<{ id: strin
               <div className="divide-y divide-[var(--border)]">
                 {tocPreview.map((item, i) => (
                   <Link key={`${item.shamelaId}-${i}`}
-                    href={`/books/${book.id}/pages/${item.page ?? item.shamelaId}`}
+                    href={`/books/${book.id}/pages/${item.shamelaId}`}
                     className="flex items-center justify-between gap-4 px-6 py-3 hover:bg-[var(--surface-2)] transition-colors group">
                     <span lang="ar" dir="rtl"
                       className="font-[family-name:var(--font-amiri)] text-[15px] text-[var(--text-1)] leading-snug">
                       {item.title}
                     </span>
                     <span className="font-[family-name:var(--font-geist-mono)] text-[10px] text-[var(--text-3)] flex-shrink-0 tabular-nums group-hover:text-[var(--text-2)] transition-colors">
-                      с. {item.page ?? item.shamelaId}
+                      с. {item.page ?? "—"}
                     </span>
                   </Link>
                 ))}

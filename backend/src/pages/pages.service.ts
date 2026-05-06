@@ -4,6 +4,14 @@ import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import { DRIZZLE } from '../database/database.module';
 import * as schema from '../database/schema';
 
+export type TocNode = {
+  shamelaId: number;
+  pageShamelaId: number;
+  page: number | null;
+  title: string;
+  children: TocNode[];
+};
+
 @Injectable()
 export class PagesService {
   constructor(@Inject(DRIZZLE) private db: PostgresJsDatabase<typeof schema>) {}
@@ -26,24 +34,15 @@ export class PagesService {
     return { items, total, limit, offset };
   }
 
-  async findOne(bookId: number, pageNum: number) {
-    // Сначала ищем по физическому номеру страницы, затем по shamelaId
-    const byPage = await this.db.query.pages.findFirst({
+  async findOne(bookId: number, shamelaId: number) {
+    const page = await this.db.query.pages.findFirst({
       where: and(
         eq(schema.pages.bookId, bookId),
-        eq(schema.pages.page, pageNum),
+        eq(schema.pages.shamelaId, shamelaId),
       ),
     });
-    if (byPage) return byPage;
-
-    const byShamelaId = await this.db.query.pages.findFirst({
-      where: and(
-        eq(schema.pages.bookId, bookId),
-        eq(schema.pages.shamelaId, pageNum),
-      ),
-    });
-    if (!byShamelaId) throw new NotFoundException(`Страница не найдена`);
-    return byShamelaId;
+    if (!page) throw new NotFoundException(`Страница не найдена`);
+    return page;
   }
 
   // Извлечение оглавления из span data-type='title' в контенте страниц
@@ -70,6 +69,80 @@ export class PagesService {
     return toc;
   }
 
+  // Иерархическое оглавление из таблицы titles + текст из pages.content
+  async getTocTree(bookId: number): Promise<TocNode[]> {
+    const rows = await this.db.execute<{
+      shamela_id: number;
+      page_shamela_id: number;
+      parent_shamela_id: number | null;
+      phys_page: number | null;
+    }>(
+      sql`SELECT t.shamela_id, t.page_shamela_id, t.parent_shamela_id, p.page as phys_page
+          FROM titles t
+          LEFT JOIN pages p ON p.book_id = t.book_id AND p.shamela_id = t.page_shamela_id
+          WHERE t.book_id = ${bookId}
+          ORDER BY t.shamela_id`,
+    );
+
+    if (rows.length === 0) return [];
+
+    // Получаем тексты заголовков из страниц которые содержат title span
+    const pageIds = [...new Set(rows.map(r => r.page_shamela_id))];
+    const contentRows = await this.db.execute<{ shamela_id: number; content: string }>(
+      sql`SELECT shamela_id, content FROM pages
+          WHERE book_id = ${bookId}
+            AND shamela_id = ANY(${sql.raw(`ARRAY[${pageIds.join(',')}]`)}::int[])
+            AND content LIKE '%data-type=%title%'`,
+    );
+
+    // Карта shamelaId → список заголовков на этой странице
+    const titleRe = /<span[^>]+data-type=['"]title['"][^>]*>([^<]+)<\/span>/g;
+    const titleMap = new Map<number, string[]>();
+    for (const row of contentRows) {
+      const titles: string[] = [];
+      titleRe.lastIndex = 0;
+      let m: RegExpExecArray | null;
+      while ((m = titleRe.exec(row.content)) !== null) {
+        const t = m[1].trim();
+        if (t) titles.push(t);
+      }
+      if (titles.length) titleMap.set(row.shamela_id, titles);
+    }
+
+    // Строим карту id → node и назначаем текст
+    // Если на одной странице несколько заголовков — берём по порядку shamela_id
+    const pageCounter = new Map<number, number>();
+    const nodeMap = new Map<number, TocNode>();
+
+    for (const row of rows) {
+      const counter = pageCounter.get(row.page_shamela_id) ?? 0;
+      const titles = titleMap.get(row.page_shamela_id) ?? [];
+      const title = titles[counter] ?? '';
+      pageCounter.set(row.page_shamela_id, counter + 1);
+
+      nodeMap.set(row.shamela_id, {
+        shamelaId: row.shamela_id,
+        pageShamelaId: row.page_shamela_id,
+        page: row.phys_page,
+        title,
+        children: [],
+      });
+    }
+
+    // Строим дерево
+    const roots: TocNode[] = [];
+    for (const row of rows) {
+      const node = nodeMap.get(row.shamela_id)!;
+      if (row.parent_shamela_id && nodeMap.has(row.parent_shamela_id)) {
+        nodeMap.get(row.parent_shamela_id)!.children.push(node);
+      } else {
+        roots.push(node);
+      }
+    }
+
+    return roots;
+  }
+
   async findByPageNumber(bookId: number, pageNumber: number) {
     const page = await this.db.query.pages.findFirst({
       where: and(
@@ -81,22 +154,14 @@ export class PagesService {
     return page;
   }
 
-  // Список номеров страниц для пагинации.
-  // Если у книги есть физические номера (page) — возвращаем их,
-  // иначе возвращаем shamelaId (для книг без разметки страниц).
-  async getPageNumbers(bookId: number): Promise<number[]> {
-    const byPage = await this.db.execute<{ page: number }>(
-      sql`SELECT DISTINCT page FROM pages
-          WHERE book_id = ${bookId} AND page IS NOT NULL
-          ORDER BY page`,
-    );
-    if (byPage.length > 0) return byPage.map(r => r.page);
-
-    const byShamelaId = await this.db.execute<{ shamela_id: number }>(
-      sql`SELECT shamela_id FROM pages
+  // Список страниц для навигации в читалке.
+  // Возвращает {shamelaId, page, part} — для построения пагинации по физическим страницам внутри тома.
+  async getPageNumbers(bookId: number): Promise<{ shamelaId: number; page: number | null; part: string | null }[]> {
+    const rows = await this.db.execute<{ shamela_id: number; page: number | null; part: string | null }>(
+      sql`SELECT shamela_id, page, part FROM pages
           WHERE book_id = ${bookId}
           ORDER BY shamela_id`,
     );
-    return byShamelaId.map(r => r.shamela_id);
+    return rows.map(r => ({ shamelaId: r.shamela_id, page: r.page, part: r.part }));
   }
 }

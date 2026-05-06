@@ -31,6 +31,12 @@ export class PagesController {
     return this.pagesService.getPageNumbers(bookId);
   }
 
+  @Get('toc-tree')
+  @ApiOperation({ summary: 'Иерархическое оглавление книги' })
+  getTocTree(@Param('bookId', ParseIntPipe) bookId: number) {
+    return this.pagesService.getTocTree(bookId);
+  }
+
   @Get(':shamelaId')
   @ApiOperation({ summary: 'Конкретная страница по Shamela ID' })
   findOne(
