@@ -8,6 +8,7 @@ export type TocNode = {
   shamelaId: number;
   pageShamelaId: number;
   page: number | null;
+  part: string | null;
   title: string;
   children: TocNode[];
 };
@@ -86,8 +87,9 @@ export class PagesService {
       page_shamela_id: number;
       parent_shamela_id: number | null;
       phys_page: number | null;
+      part: string | null;
     }>(
-      sql`SELECT t.shamela_id, t.page_shamela_id, t.parent_shamela_id, p.page as phys_page
+      sql`SELECT t.shamela_id, t.page_shamela_id, t.parent_shamela_id, p.page as phys_page, p.part
           FROM titles t
           LEFT JOIN pages p ON p.book_id = t.book_id AND p.shamela_id = t.page_shamela_id
           WHERE t.book_id = ${bookId}
@@ -134,6 +136,7 @@ export class PagesService {
         shamelaId: row.shamela_id,
         pageShamelaId: row.page_shamela_id,
         page: row.phys_page,
+        part: row.part,
         title,
         children: [],
       });

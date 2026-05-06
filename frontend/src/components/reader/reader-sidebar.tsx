@@ -7,6 +7,7 @@ export type TocNode = {
   shamelaId: number;
   pageShamelaId: number;
   page: number | null;
+  part: string | null;
   title: string;
   children: TocNode[];
 };
@@ -141,7 +142,7 @@ export function ReaderSidebar({ bookId, tocTree, currentPage }: Props) {
 }
 
 function TocTree({
-  nodes, depth, bookId, activeShamelaId, activeRef, expanded, toggle, onNavigate,
+  nodes, depth, bookId, activeShamelaId, activeRef, expanded, toggle, onNavigate, prevPart,
 }: {
   nodes: TocNode[];
   depth: number;
@@ -151,62 +152,80 @@ function TocTree({
   expanded: Set<number>;
   toggle: (id: number) => void;
   onNavigate?: () => void;
+  prevPart?: string | null;
 }) {
+  let lastPart = prevPart ?? null;
+
   return (
     <nav>
       {nodes.map(node => {
         const isActive = node.shamelaId === activeShamelaId;
         const hasChildren = node.children.length > 0;
         const isExpanded = expanded.has(node.shamelaId);
-        const href = `/books/${bookId}/pages/${node.page ?? node.pageShamelaId}`;
+        const href = `/books/${bookId}/pages/${node.pageShamelaId}`;
+
+        // Показываем метку тома только на верхнем уровне при смене тома
+        const showPartLabel = depth === 0 && node.part && node.part !== lastPart;
+        if (depth === 0 && node.part) lastPart = node.part;
 
         return (
           <div key={node.shamelaId}>
+            {/* Метка тома */}
+            {showPartLabel && (
+              <div className="px-4 pt-3 pb-1" dir="ltr">
+                <span className="font-[family-name:var(--font-geist-mono)] text-[9px] uppercase tracking-[.14em] text-[var(--text-3)]">
+                  Том {node.part}
+                </span>
+              </div>
+            )}
+
             <div
               className={[
-                "flex items-center gap-1 pr-2 transition-colors duration-100",
-                "border-l-2",
+                "flex items-center gap-1 transition-colors duration-100",
+                depth === 0 ? "border-l-2" : "border-l-[3px]",
                 isActive
                   ? "bg-[var(--surface-2)] border-l-[var(--text-1)]"
-                  : "border-transparent hover:bg-[var(--surface-2)]",
+                  : depth > 0
+                    ? "border-l-[var(--border)] hover:bg-[var(--surface-2)] hover:border-l-[var(--text-3)]"
+                    : "border-l-transparent hover:bg-[var(--surface-2)]",
               ].join(" ")}
-              style={{ paddingRight: `${8 + depth * 12}px` }}
+              style={{ paddingLeft: `${8 + depth * 16}px`, paddingRight: "8px" }}
             >
-              {/* Кнопка раскрытия */}
               {hasChildren ? (
                 <button
                   onClick={() => toggle(node.shamelaId)}
                   className="flex-shrink-0 w-5 h-5 flex items-center justify-center text-[var(--text-3)] hover:text-[var(--text-1)] transition-colors"
                   dir="ltr"
                 >
-                  <span className={["text-[10px] transition-transform duration-150", isExpanded ? "rotate-90" : ""].join(" ")}>▶</span>
+                  <span className={["text-[9px] transition-transform duration-150 inline-block", isExpanded ? "rotate-90" : ""].join(" ")}>▶</span>
                 </button>
               ) : (
-                <span className="flex-shrink-0 w-5 h-5" />
+                <span className="flex-shrink-0 w-5 h-5 flex items-center justify-center" dir="ltr">
+                  {depth > 0 && <span className="w-[3px] h-[3px] rounded-full bg-[var(--text-3)]" />}
+                </span>
               )}
 
-              {/* Ссылка */}
               <Link
                 href={href}
                 ref={isActive ? (activeRef as React.RefObject<HTMLAnchorElement>) : undefined}
                 onClick={() => { window.scrollTo(0, 0); onNavigate?.(); }}
                 className={[
-                  "flex-1 py-2 text-right",
+                  "flex-1 text-right",
+                  depth === 0 ? "py-2" : "py-1.5",
                   isActive ? "text-[var(--text-1)]" : "text-[var(--text-2)] hover:text-[var(--text-1)]",
                 ].join(" ")}
                 dir="rtl"
               >
                 <span className={[
-                  "font-[family-name:var(--font-amiri)] text-[15px] leading-relaxed line-clamp-2",
-                  isActive ? "font-bold" : "",
-                  depth === 0 ? "text-[16px]" : "",
+                  "font-[family-name:var(--font-amiri)] leading-relaxed line-clamp-2",
+                  depth === 0 ? "text-[16px]" : depth === 1 ? "text-[14px]" : "text-[13px]",
+                  isActive ? "font-bold text-[var(--text-1)]" : depth > 0 ? "text-[var(--text-3)]" : "",
                 ].join(" ")}>
                   {node.title || "—"}
                 </span>
               </Link>
             </div>
 
-            {/* Дочерние узлы */}
             {hasChildren && isExpanded && (
               <TocTree
                 nodes={node.children}

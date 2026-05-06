@@ -91,9 +91,15 @@ export default async function ReaderPage({
   const currentIdx = pageNumbers.findIndex(p => p.shamelaId === shamelaId);
   const progress = totalChunks > 0 ? ((currentIdx + 1) / totalChunks) * 100 : 0;
 
+  // Максимальная физическая страница текущего тома
+  const currentPart = pageData.part;
+  const volumeLastPage = currentPart
+    ? Math.max(...pageNumbers.filter(p => p.part === currentPart).map(p => p.page ?? 0))
+    : book.pagesCount;
+
   const content = renderContent(pageData.content);
   const hasFoot = pageData.foot && pageData.foot.trim().length > 0;
-  const pageCounter = formatPageCounter(pageData, book.pagesCount, totalChunks);
+  const pageCounter = formatPageCounter(pageData, volumeLastPage, totalChunks);
 
   return (
     <div className="min-h-screen bg-[var(--bg)]">
@@ -163,6 +169,7 @@ export default async function ReaderPage({
           bookId={book.id}
           pages={pageNumbers}
           currentShamelaId={shamelaId}
+          currentPart={currentPart}
         />
       </div>
     </div>

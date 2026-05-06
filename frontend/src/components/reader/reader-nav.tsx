@@ -14,9 +14,10 @@ type Props = {
   bookId: number;
   pages: PageEntry[];
   currentShamelaId: number;
+  currentPart: string | null;
 };
 
-export function ReaderNav({ bookId, pages, currentShamelaId }: Props) {
+export function ReaderNav({ bookId, pages, currentShamelaId, currentPart }: Props) {
   const router = useRouter();
 
   const currentIdx = pages.findIndex(p => p.shamelaId === currentShamelaId);
@@ -38,25 +39,31 @@ export function ReaderNav({ bookId, pages, currentShamelaId }: Props) {
     return () => window.removeEventListener("keydown", onKey);
   }, [bookId, prevEntry, nextEntry, router]);
 
-  const total = pages.length;
+  // Страницы текущего тома для пагинации
+  const volumePages = currentPart
+    ? pages.filter(p => p.part === currentPart)
+    : pages;
+
+  const volumeIdx = volumePages.findIndex(p => p.shamelaId === currentShamelaId);
+  const total = volumePages.length;
 
   // Строим видимые кнопки: первая, соседи текущей, последняя
   const visible: (PageEntry | "…")[] = [];
   const add = (idx: number) => {
     if (idx < 0 || idx >= total) return;
-    const e = pages[idx];
+    const e = volumePages[idx];
     if (visible.some(v => v !== "…" && (v as PageEntry).shamelaId === e.shamelaId)) return;
     visible.push(e);
   };
 
   add(0);
-  if (currentIdx - 3 > 1) visible.push("…");
-  add(currentIdx - 2);
-  add(currentIdx - 1);
-  add(currentIdx);
-  add(currentIdx + 1);
-  add(currentIdx + 2);
-  if (currentIdx + 3 < total - 2) visible.push("…");
+  if (volumeIdx - 3 > 1) visible.push("…");
+  add(volumeIdx - 2);
+  add(volumeIdx - 1);
+  add(volumeIdx);
+  add(volumeIdx + 1);
+  add(volumeIdx + 2);
+  if (volumeIdx + 3 < total - 2) visible.push("…");
   add(total - 1);
 
   // Метка кнопки — физическая страница тома или shamelaId если нет page
