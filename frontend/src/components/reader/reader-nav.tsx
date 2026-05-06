@@ -28,110 +28,79 @@ export function ReaderNav({ bookId, pages, currentShamelaId }: Props) {
     router.push(`/books/${bookId}/pages/${shamelaId}`);
   };
 
-  // Клавиши ← →
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if ((e.target as HTMLElement).tagName === "INPUT") return;
-      if (e.key === "ArrowRight" && nextEntry) {
-        e.preventDefault();
-        goTo(nextEntry.shamelaId);
-      } else if (e.key === "ArrowLeft" && prevEntry) {
-        e.preventDefault();
-        goTo(prevEntry.shamelaId);
-      }
+      if (e.key === "ArrowRight" && nextEntry) { e.preventDefault(); goTo(nextEntry.shamelaId); }
+      else if (e.key === "ArrowLeft" && prevEntry) { e.preventDefault(); goTo(prevEntry.shamelaId); }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [bookId, prevEntry, nextEntry, router]);
 
-  const currentEntry = pages[currentIdx];
-  const currentPart = currentEntry?.part ?? null;
+  const total = pages.length;
 
-  // Страницы текущего тома (или все если нет томов)
-  const volumePages = currentPart
-    ? pages.filter(p => p.part === currentPart)
-    : pages;
-
-  const volumeIdx = Math.max(0, volumePages.findIndex(p => p.shamelaId === currentShamelaId));
-
-  // Строим видимые кнопки пагинации — физические страницы тома с многоточиями
-  // Показываем: первую, соседей текущей, последнюю
-  const total = volumePages.length;
-  const visibleEntries: (PageEntry | "…")[] = [];
-
-  const addEntry = (idx: number) => {
+  // Строим видимые кнопки: первая, соседи текущей, последняя
+  const visible: (PageEntry | "…")[] = [];
+  const add = (idx: number) => {
     if (idx < 0 || idx >= total) return;
-    const e = volumePages[idx];
-    if (!e) return;
-    if (!visibleEntries.some(v => v !== "…" && (v as PageEntry).shamelaId === e.shamelaId)) {
-      visibleEntries.push(e);
-    }
+    const e = pages[idx];
+    if (visible.some(v => v !== "…" && (v as PageEntry).shamelaId === e.shamelaId)) return;
+    visible.push(e);
   };
 
-  addEntry(0);
-  if (volumeIdx - 3 > 1) visibleEntries.push("…");
-  addEntry(volumeIdx - 2);
-  addEntry(volumeIdx - 1);
-  addEntry(volumeIdx);
-  addEntry(volumeIdx + 1);
-  addEntry(volumeIdx + 2);
-  if (volumeIdx + 3 < total - 2) visibleEntries.push("…");
-  addEntry(total - 1);
+  add(0);
+  if (currentIdx - 3 > 1) visible.push("…");
+  add(currentIdx - 2);
+  add(currentIdx - 1);
+  add(currentIdx);
+  add(currentIdx + 1);
+  add(currentIdx + 2);
+  if (currentIdx + 3 < total - 2) visible.push("…");
+  add(total - 1);
 
-  // Метка кнопки — физическая страница или shamelaId если нет page
-  const pageLabel = (e: PageEntry) => e.page != null ? String(e.page) : String(e.shamelaId);
+  // Метка кнопки — физическая страница тома или shamelaId если нет page
+  const btnLabel = (e: PageEntry) => String(e.page ?? e.shamelaId);
 
-  const navButton = (e: PageEntry | "…", i: number, size: "sm" | "md") => {
-    if (e === "…") {
-      return (
-        <span key={`ell-${i}`}
-          className={`flex items-center justify-center font-[family-name:var(--font-geist-mono)] text-[var(--text-3)] select-none ${size === "sm" ? "w-8 text-[11px]" : "w-8 text-[12px]"}`}>
-          ···
-        </span>
-      );
-    }
-    const isActive = e.shamelaId === currentShamelaId;
+  const btn = (e: PageEntry | "…", i: number, sm: boolean) => {
+    if (e === "…") return (
+      <span key={`ell-${i}`} className={`flex items-center justify-center font-[family-name:var(--font-geist-mono)] text-[var(--text-3)] select-none w-8 ${sm ? "text-[11px]" : "text-[12px]"}`}>···</span>
+    );
+    const active = e.shamelaId === currentShamelaId;
     return (
-      <button
-        key={e.shamelaId}
-        onClick={() => goTo(e.shamelaId)}
+      <button key={e.shamelaId} onClick={() => goTo(e.shamelaId)}
         className={[
           "h-8 flex items-center justify-center rounded-[var(--radius-sm)] tabular-nums transition-colors font-[family-name:var(--font-geist-mono)]",
-          size === "sm" ? "min-w-[28px] px-1.5 text-[11px]" : "min-w-[32px] px-2 text-[12px]",
-          isActive
-            ? "bg-[var(--text-1)] text-white font-medium"
-            : "text-[var(--text-2)] hover:bg-[var(--surface-2)] hover:text-[var(--text-1)]",
-        ].join(" ")}
-      >
-        {pageLabel(e)}
+          sm ? "min-w-[28px] px-1.5 text-[11px]" : "min-w-[32px] px-2 text-[12px]",
+          active ? "bg-[var(--text-1)] text-white font-medium" : "text-[var(--text-2)] hover:bg-[var(--surface-2)] hover:text-[var(--text-1)]",
+        ].join(" ")}>
+        {btnLabel(e)}
       </button>
     );
   };
+
+  const chevronCls = "w-8 h-8 flex items-center justify-center rounded-[var(--radius-sm)] text-[var(--text-2)] hover:bg-[var(--surface-2)] hover:text-[var(--text-1)] disabled:opacity-30 disabled:cursor-not-allowed transition-colors";
 
   return (
     <>
       {/* Mobile */}
       <div className="fixed bottom-0 left-0 right-0 z-20 flex lg:hidden items-center justify-center gap-1 h-[52px] bg-[var(--surface)] border-t border-[var(--border)] px-2">
-        <button onClick={() => prevEntry && goTo(prevEntry.shamelaId)} disabled={!prevEntry}
-          className="w-8 h-8 flex items-center justify-center rounded-[var(--radius-sm)] text-[var(--text-2)] hover:bg-[var(--surface-2)] hover:text-[var(--text-1)] disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
+        <button onClick={() => prevEntry && goTo(prevEntry.shamelaId)} disabled={!prevEntry} className={chevronCls}>
           <ChevronLeft size={15} strokeWidth={2} />
         </button>
-        {visibleEntries.map((e, i) => navButton(e, i, "sm"))}
-        <button onClick={() => nextEntry && goTo(nextEntry.shamelaId)} disabled={!nextEntry}
-          className="w-8 h-8 flex items-center justify-center rounded-[var(--radius-sm)] text-[var(--text-2)] hover:bg-[var(--surface-2)] hover:text-[var(--text-1)] disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
+        {visible.map((e, i) => btn(e, i, true))}
+        <button onClick={() => nextEntry && goTo(nextEntry.shamelaId)} disabled={!nextEntry} className={chevronCls}>
           <ChevronRight size={15} strokeWidth={2} />
         </button>
       </div>
 
       {/* Desktop */}
       <div className="fixed bottom-0 left-[350px] right-0 z-20 hidden lg:flex items-center justify-center gap-1 h-[52px] bg-[var(--surface)] border-t border-[var(--border)] px-4">
-        <button onClick={() => prevEntry && goTo(prevEntry.shamelaId)} disabled={!prevEntry}
-          className="w-8 h-8 flex items-center justify-center rounded-[var(--radius-sm)] text-[var(--text-2)] hover:bg-[var(--surface-2)] hover:text-[var(--text-1)] disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
+        <button onClick={() => prevEntry && goTo(prevEntry.shamelaId)} disabled={!prevEntry} className={chevronCls}>
           <ChevronLeft size={15} strokeWidth={2} />
         </button>
-        {visibleEntries.map((e, i) => navButton(e, i, "md"))}
-        <button onClick={() => nextEntry && goTo(nextEntry.shamelaId)} disabled={!nextEntry}
-          className="w-8 h-8 flex items-center justify-center rounded-[var(--radius-sm)] text-[var(--text-2)] hover:bg-[var(--surface-2)] hover:text-[var(--text-1)] disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
+        {visible.map((e, i) => btn(e, i, false))}
+        <button onClick={() => nextEntry && goTo(nextEntry.shamelaId)} disabled={!nextEntry} className={chevronCls}>
           <ChevronRight size={15} strokeWidth={2} />
         </button>
       </div>

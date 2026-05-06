@@ -34,15 +34,25 @@ export class PagesService {
     return { items, total, limit, offset };
   }
 
-  async findOne(bookId: number, shamelaId: number) {
-    const page = await this.db.query.pages.findFirst({
+  async findOne(bookId: number, pageNum: number) {
+    // Для однотомных книг URL содержит физическую страницу, для многотомных — shamelaId.
+    // Ищем сначала по shamelaId, затем по физической странице как fallback.
+    const byShamelaId = await this.db.query.pages.findFirst({
       where: and(
         eq(schema.pages.bookId, bookId),
-        eq(schema.pages.shamelaId, shamelaId),
+        eq(schema.pages.shamelaId, pageNum),
       ),
     });
-    if (!page) throw new NotFoundException(`Страница не найдена`);
-    return page;
+    if (byShamelaId) return byShamelaId;
+
+    const byPage = await this.db.query.pages.findFirst({
+      where: and(
+        eq(schema.pages.bookId, bookId),
+        eq(schema.pages.page, pageNum),
+      ),
+    });
+    if (!byPage) throw new NotFoundException(`Страница не найдена`);
+    return byPage;
   }
 
   // Извлечение оглавления из span data-type='title' в контенте страниц
