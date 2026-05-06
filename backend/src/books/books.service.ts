@@ -66,7 +66,7 @@ export class BooksService {
     });
     if (!book) throw new NotFoundException(`Книга #${id} не найдена`);
 
-    const [authors, chunksCount] = await Promise.all([
+    const [authors, chunksCount, volumesCount] = await Promise.all([
       this.db
         .select({ id: schema.authors.id, name: schema.authors.name, deathNumber: schema.authors.deathNumber })
         .from(schema.authors)
@@ -74,6 +74,11 @@ export class BooksService {
         .where(eq(schema.bookAuthors.bookId, id)),
       this.db
         .select({ count: sql<number>`count(*)` })
+        .from(schema.pages)
+        .where(eq(schema.pages.bookId, id))
+        .then(r => Number(r[0].count)),
+      this.db
+        .select({ count: sql<number>`count(distinct part)` })
         .from(schema.pages)
         .where(eq(schema.pages.bookId, id))
         .then(r => Number(r[0].count)),
@@ -85,7 +90,7 @@ export class BooksService {
         })
       : null;
 
-    return { ...book, authors, category, chunksCount };
+    return { ...book, authors, category, chunksCount, volumesCount };
   }
 
   async findTitles(bookId: number) {

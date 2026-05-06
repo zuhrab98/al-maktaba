@@ -14,10 +14,11 @@ type Book     = {
   bibliography: string | null; hint: string | null;
   betaka: string | null;
   pagesCount: number;
+  volumesCount: number;
   authors: Author[];
   category: Category | null;
 };
-type TocItem = { shamelaId: number; page: number | null; title: string };
+type TocItem = { shamelaId: number; pageShamelaId: number; page: number | null; part: string | null; title: string };
 
 async function fetchBook(id: string): Promise<Book | null> {
   const res = await fetch(`${API}/books/${id}`);
@@ -25,10 +26,12 @@ async function fetchBook(id: string): Promise<Book | null> {
   return res.json();
 }
 
+// Берём только корневые узлы из toc-tree — без хашией и дочерних
 async function fetchToc(id: string): Promise<TocItem[]> {
-  const res = await fetch(`${API}/books/${id}/pages/toc`);
+  const res = await fetch(`${API}/books/${id}/pages/toc-tree`);
   if (!res.ok) return [];
-  return res.json();
+  const roots: TocItem[] = await res.json();
+  return roots;
 }
 
 async function fetchFirstPage(id: string): Promise<number> {
@@ -75,8 +78,6 @@ export default async function BookPage({ params }: { params: Promise<{ id: strin
       arabic: true,
     })),
     ...(book.category ? [{ label: "التصنيف", value: book.category.name, arabic: true }] : []),
-    ...(book.pagesCount > 0 ? [{ label: "عدد الصفحات", value: String(book.pagesCount) }] : []),
-    { label: "ترقيم الكتاب", value: "موافق للمطبوع" },
   ];
 
   return (
@@ -125,17 +126,14 @@ export default async function BookPage({ params }: { params: Promise<{ id: strin
                 ))}
               </div>
 
-              {/* Пилюли со статистикой */}
+              {/* Пилюли */}
               <div className="flex items-center gap-2 flex-wrap">
                 {book.pagesCount > 0 && (
                   <span className="inline-flex items-center gap-1.5 h-7 px-3 rounded-full border border-[var(--border)] bg-[var(--surface-2)] font-[family-name:var(--font-geist-mono)] text-[11px] text-[var(--text-2)]">
                     <Hash size={11} className="text-[var(--text-3)]" />
-                    {book.pagesCount.toLocaleString("ru")} страниц
-                  </span>
-                )}
-                {year && (
-                  <span className="inline-flex items-center gap-1.5 h-7 px-3 rounded-full border border-[var(--border)] bg-[var(--surface-2)] font-[family-name:var(--font-amiri)] text-[13px] text-[var(--text-2)]" dir="rtl">
-                    {toArabic(year)} هـ
+                    {book.volumesCount > 1
+                      ? `${book.volumesCount} томов · ${book.pagesCount.toLocaleString("ru")} страниц`
+                      : `${book.pagesCount.toLocaleString("ru")} страниц`}
                   </span>
                 )}
                 {book.category && (
@@ -191,7 +189,7 @@ export default async function BookPage({ params }: { params: Promise<{ id: strin
                         <Link href={`/authors/${book.authors[0].id}`}
                           className="font-[family-name:var(--font-amiri)] text-[15px] text-[var(--text-2)] hover:text-[var(--text-1)] underline underline-offset-2 transition-colors"
                           lang="ar">
-                          [{book.authors[0].name}]
+                          {book.authors[0].name}
                         </Link>
                       </dd>
                     </div>
@@ -232,14 +230,14 @@ export default async function BookPage({ params }: { params: Promise<{ id: strin
               <div className="divide-y divide-[var(--border)]">
                 {tocPreview.map((item, i) => (
                   <Link key={`${item.shamelaId}-${i}`}
-                    href={`/books/${book.id}/pages/${item.shamelaId}`}
+                    href={`/books/${book.id}/pages/${item.pageShamelaId}`}
                     className="flex items-center justify-between gap-4 px-6 py-3 hover:bg-[var(--surface-2)] transition-colors group">
                     <span lang="ar" dir="rtl"
                       className="font-[family-name:var(--font-amiri)] text-[15px] text-[var(--text-1)] leading-snug">
                       {item.title}
                     </span>
                     <span className="font-[family-name:var(--font-geist-mono)] text-[10px] text-[var(--text-3)] flex-shrink-0 tabular-nums group-hover:text-[var(--text-2)] transition-colors">
-                      с. {item.page ?? "—"}
+                      {item.part && `Том ${item.part}${item.page ? `, стр. ${item.page}` : ""}`}
                     </span>
                   </Link>
                 ))}
